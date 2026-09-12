@@ -22,5 +22,9 @@ GasStationDB.zip
 GasStationDB/
 .venv/
 .venv/
+<<<<<<< HEAD
 *.duckdb
 *.duckdb.wal
+=======
+.venv/
+>>>>>>> a9b7e47 (ignore venv)
