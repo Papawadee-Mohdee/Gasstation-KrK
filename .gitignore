@@ -22,3 +22,5 @@ GasStationDB.zip
 GasStationDB/
 .venv/
 .venv/
+*.duckdb
+*.duckdb.wal
