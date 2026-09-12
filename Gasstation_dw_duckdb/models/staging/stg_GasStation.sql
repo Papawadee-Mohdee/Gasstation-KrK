@@ -14,3 +14,4 @@ select *,
   (gasstation_id is null)
     as has_required_value_error
 from typed
+
