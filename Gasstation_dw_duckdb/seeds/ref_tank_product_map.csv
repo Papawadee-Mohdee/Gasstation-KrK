@@ -1,0 +1,2 @@
+tank_id,product_id,valid_from,valid_to,mapping_method,review_status,reviewed_by,reviewed_at
+1,1,2024-01-01 00:00:00,,manual_mapping,approved,admin,2026-09-12 00:00:00

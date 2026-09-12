@@ -1,4 +1,3 @@
-Stg_Product.sql
 {{ config(materialized='view') }}
 with typed as (
 select

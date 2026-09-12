@@ -1,4 +1,3 @@
-Stg_InvoiceDetail.sql
 {{ config(materialized='view') }}
 with typed as (
 select
