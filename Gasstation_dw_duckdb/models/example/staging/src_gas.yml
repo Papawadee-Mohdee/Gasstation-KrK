@@ -1,0 +1,21 @@
+version: 2
+sources:
+  - name: gas_station_raw
+    schema: main
+    tables:
+      - name: customer
+        identifier: Customer
+      - name: employee
+        identifier: Employee
+      - name: gasstation
+        identifier: GasStation
+      - name: invoice
+        identifier: Invoice
+      - name: invoicedetail
+        identifier: InvoiceDetail
+      - name: product
+        identifier: Product
+      - name: storagetank
+        identifier: StorageTank
+      - name: inventorytransaction
+        identifier: InventoryTransaction
