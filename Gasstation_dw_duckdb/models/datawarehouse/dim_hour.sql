@@ -1,11 +1,11 @@
 {{ config(materialized='table') }}
- 
+
 with hours as (
     select unnest(generate_series(0, 23)) as hour_of_day
 )
 select
     h.hour_of_day,
-    coalesce(b.day_part_label, default_bucket.day_part_label) as day_part
+    coalesce(cast(b.day_part_label as varchar), default_bucket.day_part_label) as day_part
 from hours h
 left join {{ ref('ref_hour_bucket') }} b
     on h.hour_of_day = b.hour_of_day
