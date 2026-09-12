@@ -1,0 +1,55 @@
+version: 2
+ 
+models:
+  - name: dim_date
+    columns:
+      - name: date_key
+        tests: [unique, not_null]
+ 
+  - name: dim_hour
+    columns:
+      - name: hour_of_day
+        tests: [unique, not_null]
+ 
+  - name: dim_customer
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+ 
+  - name: dim_employee
+    columns:
+      - name: employee_id
+        tests: [unique, not_null]
+ 
+  - name: dim_gasstation
+    columns:
+      - name: gasstation_id
+        tests: [unique, not_null]
+ 
+  - name: dim_payment_method
+    columns:
+      - name: payment_method_key
+        tests: [unique, not_null]
+ 
+  - name: dim_vehicle_category
+    columns:
+      - name: vehicle_type_key
+        tests: [unique, not_null]
+ 
+  - name: dim_product
+    columns:
+      - name: product_id
+        tests: [unique, not_null]
+ 
+  - name: dim_tank
+    columns:
+      - name: tank_id
+        tests: [not_null]
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [tank_id, valid_from]
+ 
+  - name: bridge_tank_product
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [tank_id, product_id, valid_from]
