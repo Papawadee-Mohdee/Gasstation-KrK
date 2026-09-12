@@ -52,3 +52,28 @@ models:
         tests: [not_null]
       - name: product_id
         tests: [not_null]
+
+  - name: fact_invoice
+    columns:
+      - name: invoice_id
+        tests: [unique, not_null]
+ 
+  - name: fact_sales
+    columns:
+      - name: invoice_detail_id
+        tests: [unique, not_null]
+ 
+  - name: fact_inventory_transaction
+    columns:
+      - name: transaction_id
+        tests: [unique, not_null]
+ 
+  - name: int_sales_daily
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [gasstation_id, product_id, date_key]
+ 
+  - name: int_inventory_daily
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [gasstation_id, product_id, date_key]
