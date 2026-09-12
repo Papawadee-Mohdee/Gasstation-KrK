@@ -1,5 +1,5 @@
 {{ config(materialized='table') }}
- 
+
 with valid_products as (
     select
         p.product_id,
@@ -9,7 +9,7 @@ with valid_products as (
         p.unit_price,
         p.stock_quantity,
         coalesce(pol.is_fuel, false) as is_fuel,
-        coalesce(pol.unit_of_measure, 'unverified') as unit_of_measure
+        coalesce(cast(pol.unit_of_measure as varchar), 'unverified') as unit_of_measure
     from {{ ref('stg_Product') }} p
     left join {{ ref('ref_product_policy') }} pol
         on p.product_id = pol.product_id
