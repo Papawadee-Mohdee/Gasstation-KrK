@@ -1,1 +1,10 @@
 vehicle_type_key,vehicle_type_label,vehicle_category
+motorcycle 50cc,Motorcycle 50cc,รถจักรยานยนต์ขนาดเล็ก
+motorcycle 110cc,Motorcycle 110cc,รถจักรยานยนต์ขนาดเล็ก
+motorcycle 125cc,Motorcycle 125cc,รถจักรยานยนต์ขนาดเล็ก
+motorcycle 150cc,Motorcycle 150cc,รถจักรยานยนต์ขนาดกลาง-ใหญ่
+motorcycle 250cc,Motorcycle 250cc,รถจักรยานยนต์ขนาดกลาง-ใหญ่
+sedan,Sedan,รถยนต์นั่งส่วนบุคคล
+suv,SUV,รถยนต์นั่งส่วนบุคคล
+pickup truck,Pickup Truck,รถกระบะ
+light truck,Light Truck,รถบรรทุกขนาดเล็ก

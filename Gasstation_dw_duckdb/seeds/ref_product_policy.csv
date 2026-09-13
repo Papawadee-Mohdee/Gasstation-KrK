@@ -1,1 +1,6 @@
 product_id,is_fuel,unit_of_measure
+1,true,liter
+2,true,liter
+3,true,liter
+4,false,liter
+5,false,liter
