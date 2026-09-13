@@ -38,3 +38,5 @@ models:
       +materialized: view
     datawarehouse:
       +materialized: table 
+vars:
+  low_fuel_threshold_pct: 20

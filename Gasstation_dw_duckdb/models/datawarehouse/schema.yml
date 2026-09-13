@@ -58,16 +58,6 @@ models:
       - name: invoice_id
         tests: [unique, not_null]
  
-  - name: fact_sales
-    columns:
-      - name: invoice_detail_id
-        tests: [unique, not_null]
- 
-  - name: fact_inventory_transaction
-    columns:
-      - name: transaction_id
-        tests: [unique, not_null]
- 
   - name: int_sales_daily
     tests:
       - dbt_utils.unique_combination_of_columns:
@@ -77,3 +67,62 @@ models:
     tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns: [gasstation_id, product_id, date_key]
+
+  - name: fact_sales
+    columns:
+      - name: invoice_detail_id
+        tests: [unique, not_null]
+      - name: gasstation_id
+        tests:
+          - relationships:
+              to: ref('dim_gasstation')
+              field: gasstation_id
+      - name: product_id
+        tests:
+          - relationships:
+              to: ref('dim_product')
+              field: product_id
+ 
+  - name: fact_inventory_transaction
+    columns:
+      - name: transaction_id
+        tests: [unique, not_null]
+      - name: gasstation_id
+        tests:
+          - relationships:
+              to: ref('dim_gasstation')
+              field: gasstation_id
+
+  - name: mart_01_station_product_daily
+    columns:
+      - name: gasstation_id
+        tests: [not_null]
+      - name: product_id
+        tests: [not_null]
+ 
+  - name: mart_02_hourly_demand
+    columns:
+      - name: gasstation_id
+        tests: [not_null]
+ 
+  - name: mart_05_top10_customers
+    columns:
+      - name: rank_in_station
+        tests:
+          - accepted_values:
+              values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+ 
+  - name: mart_06_repeat_purchase
+    columns:
+      - name: repeat_rate
+        tests: [not_null]
+ 
+  - name: mart_12_low_fuel_frequency
+    columns:
+      - name: is_below_threshold
+        tests: [not_null]
+ 
+  - name: mart_15_reorder_priority
+    columns:
+      - name: gasstation_id
+        tests: [not_null]
