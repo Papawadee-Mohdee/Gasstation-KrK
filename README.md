@@ -167,7 +167,15 @@ Data Cube นี้ได้รับการออกแบบในรูป�
 
 ### แผนผัง Data Cube (Galaxy Schema Diagram)
 ![Galaxy Schema](./Galaxy%20Schema.jpg)
+### รายละเอียดโครงสร้าง Data Cube (Data Cube Specification)
 
+#### 1. ตารางข้อเท็จจริง (Fact Tables)
+
+| ตาราง Fact | Primary Key / Foreign Keys | Measures (ตัวชี้วัด) | รายละเอียดและบทบาททางธุรกิจ |
+| :--- | :--- | :--- | :--- |
+| **`fact_sales`** | `invoice_detail_id`<br>• `date_key`<br>• `hour_of_day`<br>• `gasstation_id`<br>• `customer_id`<br>• `employee_id`<br>• `product_id`<br>• `payment_method_key` | • `quantity_sold`<br>• `unit_price`<br>• `total_price` | บันทึกข้อมูลการขายสินค้ารายบรรทัด (Line-item level) เหมาะสำหรับการวิเคราะห์ยอดขายแยกตามรายสินค้า/ชนิดน้ำมัน (รองรับ Business Questions ข้อ 1, 3, 5, 9, 10) |
+| **`fact_invoice`** | `invoice_id`<br>• `date_key`<br>• `hour_of_day`<br>• `gasstation_id`<br>• `customer_id`<br>• `employee_id`<br>• `payment_method_key`<br>• `vehicle_type_key` | • `total_amount` | บันทึกสรุปรวมระดับใบเสร็จ/ธุรกรรม (Header level) ใช้สำหรับการวิเคราะห์พฤติกรรมการซื้อตามประเภทพาหนะ ช่องทางการชำระเงิน การซื้อซ้ำ และการกระจายตัวของลูกค้า (รองรับ Business Questions ข้อ 3, 4, 6, 7) |
+| **`fact_inventory_transaction`** | `transaction_id`<br>• `date_key`<br>• `hour_of_day`<br>• `gasstation_id`<br>• `tank_id`<br>• `product_id` | • `quantity_in`<br>• `quantity_out`<br>• `remaining_quantity` | บันทึก Log การเคลื่อนไหวของน้ำมันในถังเก็บ (รับเข้า, จ่ายออก, ยอดคงเหลือ) ใช้ในการตรวจสอบสต็อก ตรวจจับน้ำมันรั่วไหล/สูญหาย และวางแผนการเติมน้ำมัน (รองรับ Business Questions ข้อ 11, 12, 13, 14, 15) |
 * [คลิกที่นี่เพื่อเปิดดู ER Diagram บน Google Drive](https://drive.google.com/file/d/1p_veBgEP3hKBFL9z522rmi3cKWPJ4uxq/view?usp=sharing)
 
 ![Operational ER Diagram](Data_Model_Diagram.drawio.png)
