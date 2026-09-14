@@ -25,7 +25,7 @@ import streamlit as st
 # 1) การตั้งค่า — แก้ตรงนี้จุดเดียวถ้าชื่อตารางเปลี่ยน
 # ---------------------------------------------------------------------------
 HERE = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.environ.get("GAS_DW_PATH", os.path.join(HERE, "dev.duckdb"))
+DB_PATH = os.environ.get("GAS_DW_PATH", os.path.join(HERE, "dashboard.duckdb"))
 
 T = {
     "mart_01": "mart_01_station_product_daily",
