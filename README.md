@@ -165,6 +165,8 @@ Gasstation_KRK/
 ## 4.Data Cube Diagram
 Data Cube นี้ได้รับการออกแบบในรูปแบบ **Galaxy Schema** (หรือ *Fact Constellation Schema*) เนื่องจากระบบมีตาราง **Fact ถึง 3 ตาราง** ได้แก่ `fact_sales`, `fact_invoice` และ `fact_inventory_transaction` ซึ่งรองรับมิติการวิเคราะห์ที่หลากหลาย โดยตาราง Fact ทั้งหมดนี้มีการเชื่อมโยงและใช้งานตารางมิติร่วมกัน เช่น `dim_date`, `dim_hour`, `dim_gasstation`, `dim_product`, `dim_customer` และ `dim_employee` ทำให้สามารถวิเคราะห์ข้อมูลข้ามฟังก์ชันได้อย่างมีประสิทธิภาพ
 
+### แผนผัง Data Cube (Galaxy Schema Diagram)
+![Galaxy Schema](./Galaxy%20Schema.jpg)
 
 * [คลิกที่นี่เพื่อเปิดดู ER Diagram บน Google Drive](https://drive.google.com/file/d/1p_veBgEP3hKBFL9z522rmi3cKWPJ4uxq/view?usp=sharing)
 
