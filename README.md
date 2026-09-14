@@ -200,7 +200,8 @@ Data Cube นี้ได้รับการออกแบบในรูป�
 สามารถเข้าสู่หน้าแอปพลิเคชันได้ 2 วิธี ดังนี้:
 
 ## 1. เข้าใช้งานผ่านลิงก์ (URL)
-คลิกที่ลิงก์ด้านล่างเพื่อเปิดหน้าเว็บไซต์ได้โดยตรงบนเบราว์เซอร์: **Live Demo Web Application:** [เข้าใช้งาน GasStation Enterprise DW & Analytics Studio](https://kdvxcyh5deojv4aewtnmwb.streamlit.app/)
+คลิกที่ลิงก์ด้านล่างเพื่อเปิดหน้าเว็บไซต์ได้โดยตรงบนเบราว์เซอร์: 
+**Live Demo Web Application:** [เข้าใช้งาน GasStation Enterprise DW & Analytics Studio](https://kdvxcyh5deojv4aewtnmwb.streamlit.app/)
 
 ## 2. เข้าใช้งานด้วยการสแกน QR Code
 คุณสามารถใช้แอปพลิเคชันกล้องถ่ายรูปในสมาร์ทโฟน (iOS/Android) หรือแอปพลิเคชันสแกน QR หรือ LINE เพื่อสแกนรูปภาพ QR Code ด้านล่างนี้ ระบบจะพาคุณไปยังหน้าเว็บไซต์ทันที
