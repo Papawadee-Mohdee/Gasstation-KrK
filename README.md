@@ -69,6 +69,63 @@
 ---
 
 ## 2. โครงสร้างโปรเจกต์และกระบวนการ ELT (Project Structure)
+Gasstation_KRK/
+├── Gasstation_dw_duckdb/
+│   ├── dbt_project.yml
+│   ├── packages.yml / package-lock.yml
+│   ├── check_schema.py
+│   ├── app.py
+│   ├── snapshots/
+│   │   └── snap_storage_tank.sql           # SCD Type 2 Track ประวัติการเปลี่ยนแปลงถังน้ำมัน
+│   └── models/
+│       ├── staging/
+│       │   ├── src_gas.yml                 # ประกาศ Data Sources (CSV Raw Files)
+│       │   ├── stg_Customer.sql
+│       │   ├── stg_Employee.sql
+│       │   ├── stg_GasStation.sql
+│       │   ├── stg_Product.sql
+│       │   ├── stg_Invoice.sql
+│       │   ├── stg_InvoiceDetail.sql
+│       │   ├── stg_StorageTank.sql
+│       │   └── stg_InventoryTransaction.sql
+│       └── datawarehouse/
+│           ├── schema.yml                  # Schema Validation & Unit Tests
+│           ├── bridge_tank_product.sql     # Bridge Table เชื่อมมิติถังน้ำมันและผลิตภัณฑ์
+│           ├── dim_customer.sql            # Dimensions (9 Tables)
+│           ├── dim_date.sql
+│           ├── dim_employee.sql
+│           ├── dim_gasstation.sql
+│           ├── dim_hour.sql
+│           ├── dim_payment_method.sql
+│           ├── dim_product.sql
+│           ├── dim_tank.sql
+│           ├── dim_vehicle_category.sql
+│           ├── fact_sales.sql              # Fact Tables (3 Tables)
+│           ├── fact_invoice.sql
+│           ├── fact_inventory_transaction.sql
+│           ├── int_sales_daily.sql         # Intermediate Transformations
+│           ├── int_inventory_daily.sql
+│           ├── mart_01_station_product_daily.sql   # Data Marts (15 Analytical Marts)
+│           ├── mart_02_hourly_demand.sql
+│           ├── mart_03_vehicle_fuel_station.sql
+│           ├── mart_04_payment_value.sql
+│           ├── mart_05_top10_customers.sql
+│           ├── mart_06_repeat_purchase.sql
+│           ├── mart_07_multi_station_customers.sql
+│           ├── mart_08_employee_workload.sql
+│           ├── mart_09_wow_change.sql
+│           ├── mart_10_product_affinity.sql
+│           ├── mart_11_inventory_imbalance.sql
+│           ├── mart_12_low_fuel_frequency.sql
+│           ├── mart_13_refill_pattern.sql
+│           ├── mart_14_sales_dispense_reconciliation.sql
+│           └── mart_15_reorder_priority.sql
+├── app_old.py                              # Streamlit Dashboard App
+├── query_duckdb.py                         # DuckDB Inspection Utility
+├── build_warehouse.py                      # Automated Build Wrapper Script
+├── requirements.txt
+└── README.md
+----
 ## 3. Business Questions (15 ข้อ)
 1. สถานีใดสร้างยอดขายสูงสุดในแต่ละวัน และยอดขายมาจากน้ำมันชนิดใดเป็นหลัก
 
