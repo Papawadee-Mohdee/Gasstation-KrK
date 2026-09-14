@@ -163,6 +163,7 @@ Gasstation_KRK/
 15. เมื่ออิงยอดคงเหลือ ณ สิ้นสุดข้อมูลและอัตราขายเฉลี่ยย้อนหลัง 7 วัน สถานีและน้ำมันชนิดใดควรได้รับการเติมก่อน
 
 ## 4.Data Cube Diagram
+Data Cube นี้ได้รับการออกแบบในรูปแบบ Galaxy Schema (Fact Constellation Schema) โดยต่อยอดมาจากฐานข้อมูลเชิงสัมพันธ์ต้นทาง (GasStationDB - PostgreSQL จาก Kaggle) เพื่อแปลงข้อมูลระดับปฏิบัติการ (OLTP) ให้อยู่ในรูปแบบเชิงมิติ (Dimensional Model) สำหรับการวิเคราะห์และตอบโจทย์ทางธุรกิจ (Business Intelligence & Analytics) รวม 15 ข้อ
 * [คลิกที่นี่เพื่อเปิดดู ER Diagram บน Google Drive](https://drive.google.com/file/d/1p_veBgEP3hKBFL9z522rmi3cKWPJ4uxq/view?usp=sharing)
 
 ![Operational ER Diagram](Data_Model_Diagram.drawio.png)
