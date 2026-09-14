@@ -25,7 +25,7 @@ import streamlit as st
 # 1) การตั้งค่า — แก้ตรงนี้จุดเดียวถ้าชื่อตารางเปลี่ยน
 # ---------------------------------------------------------------------------
 HERE = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.environ.get("GAS_DW_PATH", os.path.join(HERE, "dashboard.duckdb"))
+DB_PATH = os.path.join(HERE, "Gasstation_dw_duckdb", "dashboard.duckdb")
 
 T = {
     "mart_01": "mart_01_station_product_daily",
@@ -124,6 +124,12 @@ st.markdown(f"""
 # 3) Data access
 # ---------------------------------------------------------------------------
 @st.cache_resource(show_spinner=False)
+def get_con() -> duckdb.DuckDBPyConnection:
+    if not os.path.exists(DB_PATH):
+        st.error(f"ไม่พบไฟล์ฐานข้อมูล: `{DB_PATH}`\n\n"
+                 "วาง app.py ไว้โฟลเดอร์เดียวกับ dev.duckdb หรือกำหนด `GAS_DW_PATH`")
+        st.stop()
+    return duckdb.connect(DB_PATH, read_only=True)@st.cache_resource(show_spinner=False)
 def get_con() -> duckdb.DuckDBPyConnection:
     if not os.path.exists(DB_PATH):
         st.error(f"ไม่พบไฟล์ฐานข้อมูล: `{DB_PATH}`\n\n"
