@@ -197,7 +197,15 @@ Data Cube นี้ได้รับการออกแบบในรูป�
 
 โปรเจกต์นี้ได้รับการพัฒนาและเปิดให้เข้าใช้งานผ่าน Streamlit Web Application ที่รวมทั้งระบบตรวจเช็กคลังข้อมูล (DW Inspector) และแดชบอร์ดวิเคราะห์ธุรกิจ (Executive Analytics) ไว้ในระบบเดียว:
 
-* **Live Demo Web Application:** [เข้าใช้งาน GasStation Enterprise DW & Analytics Studio](https://kdvxcyh5deojv4aewtnmwb.streamlit.app/)
+สามารถเข้าสู่หน้าแอปพลิเคชันได้ 2 วิธี ดังนี้:
+
+## 1. เข้าใช้งานผ่านลิงก์ (URL)
+คลิกที่ลิงก์ด้านล่างเพื่อเปิดหน้าเว็บไซต์ได้โดยตรงบนเบราว์เซอร์: **Live Demo Web Application:** [เข้าใช้งาน GasStation Enterprise DW & Analytics Studio](https://kdvxcyh5deojv4aewtnmwb.streamlit.app/)
+
+## 2. เข้าใช้งานด้วยการสแกน QR Code
+คุณสามารถใช้แอปพลิเคชันกล้องถ่ายรูปในสมาร์ทโฟน (iOS/Android) หรือแอปพลิเคชันสแกน QR หรือ LINE เพื่อสแกนรูปภาพ QR Code ด้านล่างนี้ ระบบจะพาคุณไปยังหน้าเว็บไซต์ทันที
+  <img width="1000" height="1000" alt="qrcode_399807304_e48b6be23f710493606f9ddc4a216e22 (2)" src="https://github.com/user-attachments/assets/2dc24562-65db-4621-9c60-54df13963d51" />
+
 
 
 ---
