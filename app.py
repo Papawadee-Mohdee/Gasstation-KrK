@@ -307,7 +307,7 @@ cur = q(KPI_SQL, FP(k0, k1)).iloc[0]
 prev = q(KPI_SQL, FP(p0, p1)).iloc[0]
 
 c = st.columns(5)
-kpi(c[0], "ยอดขายรวม", f"{cur.sales_amount:,.0f}", " ฿",
+kpi(c[0], "ยอดขายรวม", f"{cur.sales_amount:,.0f}", " ₫",
     pct_change(cur.sales_amount, prev.sales_amount))
 kpi(c[1], "ปริมาณน้ำมันที่ขาย", f"{cur.fuel_liters:,.0f}", " ลิตร",
     pct_change(cur.fuel_liters, prev.fuel_liters))
@@ -315,7 +315,7 @@ kpi(c[2], "จำนวนบิล", f"{cur.bill_count:,.0f}", " บิล",
     pct_change(cur.bill_count, prev.bill_count))
 ab = cur.sales_amount / cur.bill_count if cur.bill_count else 0
 abp = prev.sales_amount / prev.bill_count if prev.bill_count else 0
-kpi(c[3], "ยอดขายเฉลี่ย/บิล", f"{ab:,.0f}", " ฿", pct_change(ab, abp))
+kpi(c[3], "ยอดขายเฉลี่ย/บิล", f"{ab:,.0f}", " ₫", pct_change(ab, abp))
 kpi(c[4], "ลูกค้าที่ใช้บริการ", f"{cur.customer_count:,.0f}", " ราย",
     pct_change(cur.customer_count, prev.customer_count))
 st.write("")
@@ -340,11 +340,11 @@ with TABS[0]:
             fig.add_trace(go.Scatter(x=daily.date_day, y=daily.sales_amount, name="ยอดขายรายวัน",
                                      mode="lines", line=dict(color=SKY, width=2.2),
                                      fill="tozeroy", fillcolor="rgba(96,165,250,.16)",
-                                     hovertemplate="%{x|%d %b}<br>%{y:,.0f} ฿<extra></extra>"))
+                                     hovertemplate="%{x|%d %b}<br>%{y:,.0f} ₫<extra></extra>"))
             fig.add_trace(go.Scatter(x=daily.date_day, y=daily.ma7, name="ค่าเฉลี่ย 7 วัน",
                                      mode="lines", line=dict(color=GOLD, width=2, dash="dash"),
-                                     hovertemplate="%{y:,.0f} ฿<extra></extra>"))
-            fig.update_yaxes(title_text="บาท")
+                                     hovertemplate="%{y:,.0f} ₫<extra></extra>"))
+            fig.update_yaxes(title_text="ด่ง (VND)")
             st.plotly_chart(style(fig, 330), width="stretch")
 
     with R:
@@ -353,8 +353,8 @@ with TABS[0]:
         if guard(bs):
             fig = px.bar(bs, x="sales_amount", y="gasstation_name", orientation="h")
             fig.update_traces(marker=dict(color=bs.sales_amount, colorscale=BLUE_SCALE),
-                              hovertemplate="%{y}<br>%{x:,.0f} ฿<extra></extra>")
-            fig.update_xaxes(title_text="บาท")
+                              hovertemplate="%{y}<br>%{x:,.0f} ₫<extra></extra>")
+            fig.update_xaxes(title_text="ด่ง (VND)")
             fig.update_yaxes(title_text="")
             st.plotly_chart(style(fig, 330, False), width="stretch")
 
@@ -369,9 +369,9 @@ with TABS[0]:
             fig = go.Figure(go.Pie(labels=mix.product_name, values=mix.sales_amount, hole=.62,
                                    marker=dict(colors=PALETTE, line=dict(color=NAVY_950, width=2)),
                                    textinfo="percent", textfont=dict(color="#fff", size=11),
-                                   hovertemplate="%{label}<br>%{value:,.0f} ฿ (%{percent})<extra></extra>"))
+                                   hovertemplate="%{label}<br>%{value:,.0f} ₫ (%{percent})<extra></extra>"))
             fig.add_annotation(text=f"<b>{mix.sales_amount.sum()/1e6:,.1f}</b><br>"
-                                    f"<span style='font-size:11px;color:{MUTED}'>ล้านบาท</span>",
+                                    f"<span style='font-size:11px;color:{MUTED}'>ล้านด่ง</span>",
                                showarrow=False, font=dict(size=20, color="#fff"))
             st.plotly_chart(style(fig, 360), width="stretch")
 
@@ -412,8 +412,8 @@ with TABS[0]:
         if guard(sd):
             fig = px.area(sd, x="date_day", y="sales_amount", color="gasstation_name")
             fig.update_traces(line=dict(width=1.2),
-                              hovertemplate="%{y:,.0f} ฿<extra>%{fullData.name}</extra>")
-            fig.update_yaxes(title_text="บาท")
+                              hovertemplate="%{y:,.0f} ₫<extra>%{fullData.name}</extra>")
+            fig.update_yaxes(title_text="ด่ง (VND)")
             fig.update_xaxes(title_text="")
             st.plotly_chart(style(fig, 320), width="stretch")
 
@@ -458,7 +458,7 @@ with TABS[1]:
                              color_continuous_scale=BLUE_SCALE)
             fig.update_traces(marker=dict(line=dict(color=NAVY_950, width=2)),
                               textfont=dict(color="#fff", size=12),
-                              hovertemplate="<b>%{label}</b><br>%{value:,.0f} ฿<extra></extra>")
+                              hovertemplate="<b>%{label}</b><br>%{value:,.0f} ₫<extra></extra>")
             fig.update_layout(coloraxis_showscale=False)
             st.plotly_chart(style(fig, 340, False), width="stretch")
 
@@ -521,9 +521,9 @@ with TABS[1]:
         if guard(wow, "ช่วงที่เลือกไม่มีคู่วันเทียบย้อนหลัง 7 วัน (ข้อมูลอาจสั้นเกินไป)"):
             fig = go.Figure(go.Bar(x=wow.date_day, y=wow.sales_diff,
                                    marker_color=[GREEN if v >= 0 else RED for v in wow.sales_diff],
-                                   hovertemplate="%{x|%d %b}<br>%{y:+,.0f} ฿<extra></extra>"))
+                                   hovertemplate="%{x|%d %b}<br>%{y:+,.0f} ₫<extra></extra>"))
             fig.add_hline(y=0, line_color=MUTED, line_width=1)
-            fig.update_yaxes(title_text="ผลต่าง (บาท)")
+            fig.update_yaxes(title_text="ผลต่าง (ด่ง)")
             fig.update_xaxes(title_text="")
             st.plotly_chart(style(fig, 330, False), width="stretch")
 
@@ -537,9 +537,9 @@ with TABS[1]:
         if guard(wp):
             fig = go.Figure(go.Bar(x=wp.sales_diff, y=wp.product_name, orientation="h",
                                    marker_color=[GREEN if v >= 0 else RED for v in wp.sales_diff],
-                                   hovertemplate="%{y}<br>%{x:+,.0f} ฿<extra></extra>"))
+                                   hovertemplate="%{y}<br>%{x:+,.0f} ₫<extra></extra>"))
             fig.add_vline(x=0, line_color=MUTED, line_width=1)
-            fig.update_xaxes(title_text="ผลต่างสะสม (บาท)")
+            fig.update_xaxes(title_text="ผลต่างสะสม (ด่ง)")
             fig.update_yaxes(title_text="")
             st.plotly_chart(style(fig, 330, False), width="stretch")
 
@@ -603,10 +603,10 @@ with TABS[2]:
             fig = px.bar(t10, x="customer_sales", y="customer_name", orientation="h",
                          custom_data=["product_name", "bill_count", "rank_in_station"])
             fig.update_traces(marker=dict(color=t10.customer_sales, colorscale=BLUE_SCALE),
-                              hovertemplate="อันดับ %{customdata[2]} · %{y}<br>%{x:,.0f} ฿ · "
+                              hovertemplate="อันดับ %{customdata[2]} · %{y}<br>%{x:,.0f} ₫ · "
                                             "%{customdata[1]} บิล<br>สินค้าหลัก: %{customdata[0]}"
                                             "<extra></extra>")
-            fig.update_xaxes(title_text="ยอดซื้อน้ำมันสะสม (บาท)")
+            fig.update_xaxes(title_text="ยอดซื้อน้ำมันสะสม (ด่ง)")
             fig.update_yaxes(title_text="")
             st.plotly_chart(style(fig, 400, False), width="stretch")
 
@@ -656,7 +656,7 @@ with TABS[2]:
             fig = px.bar(pr, x="bills", y="pair", orientation="h", custom_data=["abv"])
             fig.update_traces(marker=dict(color=pr.bills, colorscale=BLUE_SCALE),
                               hovertemplate="%{y}<br>%{x:,.0f} บิล<br>"
-                                            "ยอดบิลเฉลี่ย %{customdata[0]:,.0f} ฿<extra></extra>")
+                                            "ยอดบิลเฉลี่ย %{customdata[0]:,.0f} ₫<extra></extra>")
             fig.update_xaxes(title_text="จำนวนบิลที่พบคู่นี้")
             fig.update_yaxes(title_text="")
             st.plotly_chart(style(fig, 360, False), width="stretch")
@@ -698,8 +698,8 @@ with TABS[3]:
                 z=piv.values, x=piv.columns, y=piv.index, colorscale=BLUE_SCALE, xgap=3, ygap=3,
                 text=[[f"{v:,.0f}" if pd.notna(v) else "" for v in r] for r in piv.values],
                 texttemplate="%{text}", textfont=dict(color="#fff", size=11),
-                colorbar=dict(title="฿/บิล", outlinewidth=0, tickfont=dict(color=MUTED)),
-                hovertemplate="%{y} · %{x}<br>%{z:,.0f} ฿/บิล<extra></extra>"))
+                colorbar=dict(title="₫/บิล", outlinewidth=0, tickfont=dict(color=MUTED)),
+                hovertemplate="%{y} · %{x}<br>%{z:,.0f} ₫/บิล<extra></extra>"))
             fig.update_xaxes(title_text="")
             fig.update_yaxes(title_text="")
             st.plotly_chart(style(fig, 340, False), width="stretch")
@@ -712,8 +712,8 @@ with TABS[3]:
         if guard(tt):
             fig = px.bar(tt, x="amt", y="payment_method_label", orientation="h")
             fig.update_traces(marker=dict(color=tt.amt, colorscale=BLUE_SCALE),
-                              hovertemplate="%{y}<br>%{x:,.0f} ฿<extra></extra>")
-            fig.update_xaxes(title_text="บาท")
+                              hovertemplate="%{y}<br>%{x:,.0f} ₫<extra></extra>")
+            fig.update_xaxes(title_text="ด่ง (VND)")
             fig.update_yaxes(title_text="")
             st.plotly_chart(style(fig, 340, False), width="stretch")
 
@@ -755,10 +755,10 @@ with TABS[3]:
                              custom_data=["gasstation_name", "avg_bill"])
             fig.update_traces(marker=dict(line=dict(width=.6, color=NAVY_950), opacity=.85),
                               hovertemplate="<b>%{hovertext}</b><br>%{customdata[0]}<br>"
-                                            "%{x:,.0f} บิล · %{y:,.0f} ฿<br>"
-                                            "เฉลี่ย %{customdata[1]:,.0f} ฿/บิล<extra></extra>")
+                                            "%{x:,.0f} บิล · %{y:,.0f} ₫<br>"
+                                            "เฉลี่ย %{customdata[1]:,.0f} ₫/บิล<extra></extra>")
             fig.update_xaxes(title_text="จำนวนบิล")
-            fig.update_yaxes(title_text="ยอดขาย (บาท)")
+            fig.update_yaxes(title_text="ยอดขาย (ด่ง)")
             st.plotly_chart(style(fig, 360), width="stretch")
 
 # ===========================================================================
@@ -855,6 +855,53 @@ with TABS[4]:
             fig.update_yaxes(title_text="ลิตร")
             fig.update_xaxes(title_text="")
             st.plotly_chart(style(fig, 380), width="stretch")
+
+    st.divider()
+    st.markdown("#### Q13 · ขนาดและความถี่การเติมน้ำมันเหมาะสมกับความจุถังเพียงใด")
+    c1, c2 = st.columns([1, 1.35])
+    with c1:
+        panel("ปริมาณเติมเฉลี่ยต่อครั้ง คิดเป็น % ของความจุถัง",
+              f"{T['mart_13']} × dim_tank — ใกล้ 100% = เติมเต็มถัง")
+        rf = q(f"""select product_name,
+                          avg(pct_refill_of_capacity) pct_cap,
+                          avg(avg_qty_per_refill) avg_qty,
+                          sum(refill_count) refills
+                   from {T['mart_13']} where {MW} and refill_count > 0
+                   group by 1 order by 2""", MP())
+        if guard(rf, "ยังไม่มีข้อมูลการเติมน้ำมัน"):
+            fig = px.bar(rf, x="pct_cap", y="product_name", orientation="h",
+                         custom_data=["avg_qty", "refills"],
+                         text=rf.pct_cap.map(lambda v: f"{v:.0%}"))
+            fig.update_traces(marker=dict(color=rf.pct_cap, colorscale=BLUE_SCALE),
+                              textposition="outside", textfont=dict(color=INK, size=11),
+                              hovertemplate="%{y}<br>%{x:.1%} ของความจุ<br>"
+                                            "เฉลี่ย %{customdata[0]:,.0f} ลิตร/ครั้ง<br>"
+                                            "เติมทั้งหมด %{customdata[1]:,.0f} ครั้ง<extra></extra>")
+            fig.update_xaxes(tickformat=".0%", title_text="% ของความจุถัง")
+            fig.update_yaxes(title_text="")
+            st.plotly_chart(style(fig, 360, False), width="stretch")
+
+    with c2:
+        panel("ความสัมพันธ์: อัตราจ่ายออกต่อวัน vs ขนาดการเติม",
+              f"{T['mart_13']} — แต่ละจุดคือถัง 1 ใบใน 1 วัน · ขนาดจุด = จำนวนครั้งที่เติม")
+        sc = q(f"""select product_name, tank_id, capacity_liters,
+                          quantity_out_per_day, avg_qty_per_refill, refill_count
+                   from {T['mart_13']} where {MW} and refill_count > 0
+                     and avg_qty_per_refill is not null
+                   order by quantity_out_per_day desc limit 500""", MP())
+        if guard(sc, "ยังไม่มีข้อมูลการเติมน้ำมัน"):
+            fig = px.scatter(sc, x="quantity_out_per_day", y="avg_qty_per_refill",
+                             color="product_name", size="refill_count", size_max=18,
+                             custom_data=["tank_id", "capacity_liters", "refill_count"])
+            fig.update_traces(marker=dict(line=dict(width=.6, color=NAVY_950), opacity=.8),
+                              hovertemplate="ถัง %{customdata[0]} (ความจุ %{customdata[1]:,.0f} ล.)"
+                                            "<br>จ่ายออก %{x:,.0f} ล./วัน<br>"
+                                            "เติมเฉลี่ย %{y:,.0f} ล./ครั้ง<br>"
+                                            "เติม %{customdata[2]} ครั้ง"
+                                            "<extra>%{fullData.name}</extra>")
+            fig.update_xaxes(title_text="ปริมาณจ่ายออกต่อวัน (ลิตร)")
+            fig.update_yaxes(title_text="ปริมาณเติมเฉลี่ยต่อครั้ง (ลิตร)")
+            st.plotly_chart(style(fig, 360), width="stretch")
 
     st.divider()
     st.markdown("#### Q14 · ยอดขายตามใบเสร็จ vs ปริมาณจ่ายออกจากถัง")
