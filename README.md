@@ -176,6 +176,19 @@ Data Cube นี้ได้รับการออกแบบในรูป�
 | **`fact_sales`** | `invoice_detail_id`<br>• `date_key`<br>• `hour_of_day`<br>• `gasstation_id`<br>• `customer_id`<br>• `employee_id`<br>• `product_id`<br>• `payment_method_key` | • `quantity_sold`<br>• `unit_price`<br>• `total_price` | บันทึกข้อมูลการขายสินค้ารายบรรทัด (Line-item level) เหมาะสำหรับการวิเคราะห์ยอดขายแยกตามรายสินค้า/ชนิดน้ำมัน (รองรับ Business Questions ข้อ 1, 3, 5, 9, 10) |
 | **`fact_invoice`** | `invoice_id`<br>• `date_key`<br>• `hour_of_day`<br>• `gasstation_id`<br>• `customer_id`<br>• `employee_id`<br>• `payment_method_key`<br>• `vehicle_type_key` | • `total_amount` | บันทึกสรุปรวมระดับใบเสร็จ/ธุรกรรม (Header level) ใช้สำหรับการวิเคราะห์พฤติกรรมการซื้อตามประเภทพาหนะ ช่องทางการชำระเงิน การซื้อซ้ำ และการกระจายตัวของลูกค้า (รองรับ Business Questions ข้อ 3, 4, 6, 7) |
 | **`fact_inventory_transaction`** | `transaction_id`<br>• `date_key`<br>• `hour_of_day`<br>• `gasstation_id`<br>• `tank_id`<br>• `product_id` | • `quantity_in`<br>• `quantity_out`<br>• `remaining_quantity` | บันทึก Log การเคลื่อนไหวของน้ำมันในถังเก็บ (รับเข้า, จ่ายออก, ยอดคงเหลือ) ใช้ในการตรวจสอบสต็อก ตรวจจับน้ำมันรั่วไหล/สูญหาย และวางแผนการเติมน้ำมัน (รองรับ Business Questions ข้อ 11, 12, 13, 14, 15) |
+#### 2. ตารางมิติที่ใช้งานร่วมกัน (Conformed Dimension Tables)
+
+* **`dim_date`**: มิติด้านวันที่ (ปี, เดือน, วัน, วันในสัปดาห์, วันหยุดเสาร์-อาทิตย์, วันเริ่มต้น/สิ้นสุดเดือน) สำหรับทำ Time-series Analysis และ DoD/WoW Comparison
+* **`dim_hour`**: มิติด้านช่วงเวลา (`hour_of_day`, `day_part`) สำหรับวิเคราะห์ช่วงเวลาขายหนาแน่น (Peak Hours) และการวางแผนกำลังคน
+* **`dim_gasstation`**: มิติสถานีบริการน้ำมัน (ชื่อสาขา, ที่อยู่, เบอร์โทรศัพท์) สำหรับเปรียบเทียบผลการดำเนินงานรายสาขา
+* **`dim_employee`**: มิติพนักงาน (ชื่อ, ตำแหน่ง, สาขาต้นสังกัด `home_gasstation_id`, วันเริ่มงาน) สำหรับวัดประสิทธิภาพและภาระงานของบุคลากร
+* **`dim_customer`**: มิติลูกค้า/สมาชิก (ชื่อ, ที่อยู่, เบอร์โทร, ประเภทพาหนะ, ทะเบียนรถ) สำหรับทำ Customer Segmentation & Loyalty Analytics
+* **`dim_product`**: มิติสินค้า/น้ำมันเชื้อเพลิง (ชื่อสินค้า, ประเภทสินค้า `product_type`, ซัพพลายเออร์, ราคาต่อหน่วย, หน่วยนับ)
+* **`dim_payment_method`**: มิติช่องทางการชำระเงิน (เงินสด, บัตรเครดิต, สแกน QR)
+* **`dim_vehicle_category`**: มิติหมวดหมู่ยานพาหนะ (รถยนต์ส่วนบุคคล, รถบรรทุก, รถจักรยานยนต์)
+* **`dim_tank` & `bridge_tank_product`**: มิติทรัพย์สินถังเก็บน้ำมันใต้ดิน ความจุ และตารางสะพานเชื่อมแบบ Dynamic Mapping เพื่อรองรับการเปลี่ยนประเภทน้ำมันบรรจุในถังตามช่วงเวลา (SCD Type 2 Pattern)
+
+---
 * [คลิกที่นี่เพื่อเปิดดู ER Diagram บน Google Drive](https://drive.google.com/file/d/1p_veBgEP3hKBFL9z522rmi3cKWPJ4uxq/view?usp=sharing)
 
 ![Operational ER Diagram](Data_Model_Diagram.drawio.png)
