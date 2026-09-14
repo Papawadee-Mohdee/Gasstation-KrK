@@ -36,7 +36,7 @@
 * **ขอบเขตระบบ:** บันทึกธุรกรรมการขายน้ำมันประจำวัน การจัดการคลังน้ำมัน หัวจ่าย พนักงาน และลูกค้า รวม 24 วัน (15 มีนาคม – 7 เมษายน 2024)[cite: 2]
 * **ER Diagram ต้นทาง:** [คลิกเปิดดู ER Diagram บน Google Drive](https://drive.google.com/file/d/1JGIX7BkISNF0DNA6mARoEywLSQCLhmJH/view)
 
-![Operational ER Diagram](ER_Diagram.drawio.png)
+![Operational ER Diagram](ER_gas.drawio.png)
 
 แบบจำลองฐานข้อมูลเชิงสัมพันธ์นี้ ออกแบบเพื่อรองรับการดำเนินงานบริหารจัดการสถานีบริการน้ำมัน ครอบคลุมกระบวนการขาย บุคลากรประจำสาขา และปริมาณน้ำมันคงคลัง[cite: 2] แบ่งเป็น 3 กลุ่มหลักดังนี้
 1. กลุ่มข้อมูลหลักและโครงสร้างสาขา
@@ -69,6 +69,9 @@
 ---
 
 ## 2. โครงสร้างโปรเจกต์และกระบวนการ ELT (Project Structure)
+โครงสร้างโปรเจกต์ทั้งหมด
+
+```
 Gasstation_KRK/
 ├── Gasstation_dw_duckdb/
 │   ├── dbt_project.yml
@@ -125,7 +128,9 @@ Gasstation_KRK/
 ├── build_warehouse.py                      # Automated Build Wrapper Script
 ├── requirements.txt
 └── README.md
-----
+```
+---
+
 ## 3. Business Questions (15 ข้อ)
 1. สถานีใดสร้างยอดขายสูงสุดในแต่ละวัน และยอดขายมาจากน้ำมันชนิดใดเป็นหลัก
 
@@ -156,5 +161,22 @@ Gasstation_KRK/
 14. ปริมาณขายตามใบเสร็จตรงกับปริมาณจ่ายออกจากถังหรือไม่ และส่วนต่างกระจุกตัวที่สถานี น้ำมันชนิด หรือวันใด
 
 15. เมื่ออิงยอดคงเหลือ ณ สิ้นสุดข้อมูลและอัตราขายเฉลี่ยย้อนหลัง 7 วัน สถานีและน้ำมันชนิดใดควรได้รับการเติมก่อน
+
+## 4.Data Cube Diagram
+* [คลิกที่นี่เพื่อเปิดดู ER Diagram บน Google Drive](https://drive.google.com/file/d/1p_veBgEP3hKBFL9z522rmi3cKWPJ4uxq/view?usp=sharing)
+
+![Operational ER Diagram](Data_Model_Diagram.drawio.png)
+
+## Interactive Web Application & Analytics Dashboard
+
+โปรเจกต์นี้ได้รับการพัฒนาและเปิดให้เข้าใช้งานผ่าน Streamlit Web Application ที่รวมทั้งระบบตรวจเช็กคลังข้อมูล (DW Inspector) และแดชบอร์ดวิเคราะห์ธุรกิจ (Executive Analytics) ไว้ในระบบเดียว:
+
+* **Live Demo Web Application:** [เข้าใช้งาน GasStation Enterprise DW & Analytics Studio](https://kdvxcyh5deojv4aewtnmwb.streamlit.app/)
+<img width="1816" height="2362" alt="ไม่มีชื่อเรื่อง" src="https://github.com/user-attachments/assets/e06befc2-dae0-42ca-a1ac-9d681171445a" />
+
+---
+
+## โครงสร้างฟังก์ชันการทำงานบน Web Application
+
 =======
 >>>>>>> krk_gas
