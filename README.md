@@ -11,5 +11,5 @@ Project Group1
 
 ## Data Warehouse Architecture & Dimensional Modeling
 
-คลังข้อมูล **GasStation Data Warehouse** ออกแบบตามหลักการ **Star Schema Modeling** โดยแบ่งออกเป็น **8 Dimension Tables** และ **2 Fact Tables** เพื่อรองรับการวิเคราะห์ข้อมูลเชิงลึกด้านยอดขาย (Sales Analytics) และการบริหารจัดการน้ำมันคงคลัง (Inventory Management)
+คลังข้อมูล **GasStation Data Warehouse** ออกแบบตามหลักการ เพื่อรองรับการวิเคราะห์ข้อมูลเชิงลึกด้านยอดขาย (Sales Analytics) และการบริหารจัดการน้ำมันคงคลัง (Inventory Management)
 ---
