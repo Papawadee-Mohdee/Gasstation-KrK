@@ -190,9 +190,6 @@ Data Cube นี้ได้รับการออกแบบในรูป�
 * **`dim_tank` & `bridge_tank_product`**: มิติทรัพย์สินถังเก็บน้ำมันใต้ดิน ความจุ และตารางสะพานเชื่อมแบบDynamic Mapping เพื่อรองรับการเปลี่ยนประเภทน้ำมันบรรจุในถังตามช่วงเวลา(SCD Type 2 Pattern)
 
 ---
-* [คลิกที่นี่เพื่อเปิดดู ER Diagram บน Google Drive](https://drive.google.com/file/d/1p_veBgEP3hKBFL9z522rmi3cKWPJ4uxq/view?usp=sharing)
-
-![Operational ER Diagram](Data_Model_Diagram.drawio.png)
 
 ## Interactive Web Application & Analytics Dashboard
 
