@@ -1,6 +1,16 @@
 version: 2
 
 models:
+  - name: dim_date
+    columns:
+      - name: date_key
+        tests: [unique, not_null]
+
+  - name: dim_hour
+    columns:
+      - name: hour_of_day
+        tests: [unique, not_null]
+
   - name: dim_customer
     columns:
       - name: customer_id
@@ -16,7 +26,101 @@ models:
       - name: gasstation_id
         tests: [unique, not_null]
 
+  - name: dim_payment_method
+    columns:
+      - name: payment_method_key
+        tests: [unique, not_null]
+
+  - name: dim_vehicle_category
+    columns:
+      - name: vehicle_type_key
+        tests: [unique, not_null]
+
   - name: dim_product
     columns:
       - name: product_id
+        tests: [unique, not_null]
+
+  - name: dim_tank
+    columns:
+      - name: tank_id
+        tests: [unique, not_null]
+
+  - name: bridge_tank_product
+    columns:
+      - name: tank_id
+        tests: [not_null]
+      - name: product_id
+        tests: [not_null]
+
+  - name: fact_invoice
+    columns:
+      - name: invoice_id
+        tests: [unique, not_null]
+      - name: gasstation_id
+        tests:
+          - relationships:
+              to: ref('dim_gasstation')
+              field: gasstation_id
+
+  - name: fact_sales
+    columns:
+      - name: invoice_detail_id
+        tests: [unique, not_null]
+      - name: gasstation_id
+        tests:
+          - relationships:
+              to: ref('dim_gasstation')
+              field: gasstation_id
+      - name: product_id
+        tests:
+          - relationships:
+              to: ref('dim_product')
+              field: product_id
+
+  - name: fact_inventory_transaction
+    columns:
+      - name: transaction_id
+        tests: [unique, not_null]
+      - name: gasstation_id
+        tests:
+          - relationships:
+              to: ref('dim_gasstation')
+              field: gasstation_id
+
+  - name: int_sales_daily
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [gasstation_id, product_id, date_key]
+
+  - name: int_inventory_daily
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [gasstation_id, product_id, date_key]
+
+  - name: mart_01_station_sales_tiering
+    columns:
+      - name: gasstation_id
+        tests: [unique, not_null]
+
+  - name: mart_02_top_fuel_per_station
+    columns:
+      - name: gasstation_id
+        tests: [not_null]
+      - name: product_id
+        tests: [not_null]
+
+  - name: mart_03_peak_hours
+    columns:
+      - name: gasstation_id
+        tests: [not_null]
+
+  - name: mart_12_low_fuel_tanks
+    columns:
+      - name: is_below_threshold
+        tests: [not_null]
+
+  - name: mart_15_revenue_per_employee
+    columns:
+      - name: gasstation_id
         tests: [unique, not_null]
