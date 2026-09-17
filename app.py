@@ -8,10 +8,6 @@ app.py — Fuel Station Analytics Report (v3 · ต่อกับ dbt warehouse
 
 ถ้าไฟล์ฐานข้อมูลอยู่ที่อื่น ตั้งค่าผ่าน environment variable ได้:
     GAS_DW_PATH=/path/to/dev.duckdb streamlit run app.py
-
-ออกแบบใหม่ตามแนวทาง "น้อยแต่ครอบคลุม": 7 กราฟหลัก + แผงตัวเลขสรุป
-แทนที่จะทำ 1 กราฟต่อ 1 คำถาม แต่ละกราฟถูกเลือกให้ตอบได้หลายข้อพร้อมกัน
-โดยยังอธิบายได้ชัดเจนว่าทำไมถึงเลือกรูปแบบนั้น (ระบุไว้ใต้หัวข้อทุกส่วน)
 """
 
 from __future__ import annotations
@@ -82,7 +78,6 @@ st.markdown(f"""
   .kpi .sub {{ font-size: .76rem; color: {INK_SOFT}; margin-top: 4px; }}
   .panel {{ background: {SURFACE}; border: 1px solid {BORDER}; border-radius: 10px; padding: 18px 20px 8px; margin-bottom: 18px; }}
   .panel h4 {{ margin: 0 0 4px; font-size: 1.02rem; font-weight: 700; }}
-  .panel .q-tag {{ display: inline-block; background: rgba(42,120,214,.10); color: {BLUE}; border-radius: 4px; padding: 1px 7px; font-size: .72rem; font-weight: 700; margin-right: 6px; }}
   .panel .why {{ color: {MUTED}; font-size: .80rem; margin: 4px 0 12px; line-height: 1.5; }}
   [data-testid="stDataFrame"] {{ border: 1px solid {BORDER}; border-radius: 8px; }}
   .stAlert {{ border-radius: 8px; }}
@@ -109,9 +104,9 @@ def q(sql: str, params: tuple | list | None = None) -> pd.DataFrame:
     return get_con().execute(sql, list(params) if params else []).df()
 
 
-def panel(title: str, tags: str, why: str) -> None:
+def panel(title: str, why: str = "") -> None:
     st.markdown(f'<div class="panel"><h4>{title}</h4>'
-                f'<div>{tags}</div><p class="why">{why}</p></div>', unsafe_allow_html=True)
+                f'<p class="why">{why}</p></div>', unsafe_allow_html=True)
 
 
 def style(fig: go.Figure, height: int = 360, legend_top: bool = True) -> go.Figure:
@@ -259,50 +254,39 @@ kpi(c[2], "จำนวนบิล", f"{cur_k.bill_count:,.0f}", " บิล",
 kpi(c[3], "สถานีขายดีสุด", top_station.iloc[0].gasstation_name if not top_station.empty else "—",
     sub=f"{top_station.iloc[0].s:,.0f} ₫" if not top_station.empty else "")
 kpi(c[4], "ส่วนต่างยอดขายสูงสุด/ต่ำสุดต่อวัน", f"{spread:,.1f}" if pd.notna(spread) else "—", " เท่า",
-    "เฉลี่ยทั้งระบบ (Q9)")
+    "เฉลี่ยทั้งระบบ")
 st.write("")
 
 # ===========================================================================
-# ส่วนที่ 1 — ผลการดำเนินงานตามสถานี  (Q1, Q7, Q9)
+# ส่วนที่ 1 — ผลการดำเนินงานตามสถานี
 # ===========================================================================
-panel("ผลการดำเนินงานตามสถานี: กลุ่มดีที่สุด vs แย่ที่สุด",
-      '<span class="q-tag">Q1</span><span class="q-tag">Q7</span>',
-      "จัดกลุ่มสถานีเป็นสูง/กลาง/ต่ำ (Q1) จากยอดขายเฉลี่ยต่อวัน โดยคำนวณจากทั้ง 100 สถานีเสมอ "
-      "ไม่ขึ้นกับตัวกรองสถานีด้านซ้าย (การจัดกลุ่มต้องอิงประชากรทั้งหมดถึงจะมีความหมาย) "
-      "แล้วแสดงเฉพาะ 8 อันดับแรกและ 8 อันดับสุดท้ายเทียบกัน — ถ้าดูทั้ง 100 สถานีพร้อมกันแท่งจะเบียดจนแยกไม่ออก "
-      "แต่ถ้าดูแค่ Top 10 ก็จะเห็นแต่กลุ่มบนซึ่งมีค่าใกล้เคียงกันเองจนดูไม่ต่าง การเทียบสองขั้วจึงเห็นส่วนต่างจริง "
-      "(สูงสุด/ต่ำสุดต่างกันเกือบ 4 เท่า) ชื่อถนนของแต่ละสถานีอยู่ในป้ายเมื่อชี้เมาส์ (ตอบ Q7) "
-      "ส่วนต่างยอดขายรายวัน (Q9) สรุปเป็นตัวเลขในแผงด้านบนแล้ว")
+panel("ผลการดำเนินงานตามสถานี",
+      "แท่งแนวนอนเรียงตามยอดขายเฉลี่ยต่อวันของสถานีในขอบเขตที่เลือก สีไล่ระดับตามกลุ่มยอดขาย "
+      "(สูง/กลาง/ต่ำ) ช่วยอ่านกลุ่มได้เร็วโดยไม่ต้องกดตัวเลข ชื่อถนนของแต่ละสถานีแสดงในป้ายเมื่อชี้เมาส์")
 
 perf = q("""
     with daily as (
         select gasstation_id, date_key, sum(total_amount) as daily_sales
         from fact_invoice
-        where date_key between ? and ?
+        where gasstation_id = any(?) and date_key between ? and ?
         group by 1, 2
     ),
     station_avg as (
         select gasstation_id, avg(daily_sales) as avg_daily_sales
         from daily group by 1
-    ),
-    tiered as (
-        select gasstation_id, avg_daily_sales,
-               ntile(3) over (order by avg_daily_sales desc) as tier_rank,
-               row_number() over (order by avg_daily_sales desc) as rnk_desc,
-               row_number() over (order by avg_daily_sales asc) as rnk_asc
-        from station_avg
     )
-    select t.gasstation_id, g.gasstation_name,
+    select s.gasstation_id, g.gasstation_name,
            trim(split_part(g.address, ',', 1)) as road_name,
-           t.avg_daily_sales, t.tier_rank
-    from tiered t join dim_gasstation g on t.gasstation_id = g.gasstation_id
-    where t.rnk_desc <= 8 or t.rnk_asc <= 8
-""", (k0, k1))
+           s.avg_daily_sales,
+           ntile(3) over (order by s.avg_daily_sales desc) as tier_rank
+    from station_avg s join dim_gasstation g on s.gasstation_id = g.gasstation_id
+    order by s.avg_daily_sales desc
+""", (S, k0, k1))
 
 if guard(perf):
     TIER_LABEL = {1: "กลุ่มสูง", 2: "กลุ่มกลาง", 3: "กลุ่มต่ำ"}
     TIER_COLOR = {1: SEQ_BLUE[4], 2: SEQ_BLUE[3], 3: SEQ_BLUE[1]}
-    top_n = perf.sort_values("avg_daily_sales")
+    top_n = perf.head(20).sort_values("avg_daily_sales")
     fig = go.Figure()
     for tier in [3, 2, 1]:
         sub = top_n[top_n["tier_rank"] == tier]
@@ -313,22 +297,18 @@ if guard(perf):
             name=TIER_LABEL[tier], marker_color=TIER_COLOR[tier],
             customdata=sub[["road_name"]].values,
             hovertemplate="%{y}<br>ถนน %{customdata[0]}<br>%{x:,.0f} ₫/วัน<extra></extra>"))
-    ratio = perf.avg_daily_sales.max() / perf.avg_daily_sales.min()
-    fig.add_annotation(xref="paper", yref="paper", x=1, y=1.08, showarrow=False,
-                        text=f"สูงสุด/ต่ำสุด = {ratio:.1f} เท่า", font=dict(color=MUTED, size=12))
     fig.update_layout(barmode="overlay", legend_title_text="ระดับยอดขาย")
     fig.update_xaxes(title_text="ยอดขายเฉลี่ยต่อวัน (₫)")
     fig.update_yaxes(title_text="")
-    st.plotly_chart(style(fig, 460, True), width="stretch")
+    st.plotly_chart(style(fig, 420, True), width="stretch")
 
 # ===========================================================================
-# ส่วนที่ 2 — โครงสร้างสินค้าตามสถานี  (Q2, Q8)
+# ส่วนที่ 2 — โครงสร้างสินค้าตามสถานี
 # ===========================================================================
-panel("โครงสร้างยอดขายตามชนิดสินค้า", '<span class="q-tag">Q2</span><span class="q-tag">Q8</span>',
-      "ทดสอบก่อนแล้วว่าสัดส่วนเบนซิน/ดีเซลของแต่ละสถานีต่างกันไม่ถึง 2 จุดเปอร์เซ็นต์ทั้งระบบ "
-      "การทำแท่งสัดส่วนแยกทีละสถานีจะได้แท่งหน้าตาเหมือนกันหมด 100 แท่ง ซึ่งไม่ช่วยให้เข้าใจอะไรเพิ่ม "
-      "จึงตอบ Q8 ด้วยตัวเลขสรุปตัวเดียวพอ (ซ้าย) ส่วนสินค้าขายดีที่สุดของแต่ละสถานี (Q2) "
-      "กลับต่างกันจริงราวครึ่งต่อครึ่งระหว่างสองยี่ห้อ จึงคุ้มที่จะแสดงเป็นตารางแยกสถานี (ขวา)")
+panel("โครงสร้างยอดขายตามชนิดสินค้า",
+      "แท่งสัดส่วน 100% ต่อสถานี แบ่งตามกลุ่มสินค้า (Gasoline / Diesel / Lubricant) "
+      "แสดงสัดส่วนเบนซินเทียบดีเซลของแต่ละสถานี สินค้าที่ขายดีที่สุดของแต่ละสถานี "
+      "ดูได้จากป้ายเมื่อชี้เมาส์บนแท่งที่ใหญ่ที่สุด")
 
 mix = q("""
     select s.gasstation_id, g.gasstation_name, p.product_type, p.product_name,
@@ -336,55 +316,40 @@ mix = q("""
     from fact_sales s
     join dim_product p on s.product_id = p.product_id
     join dim_gasstation g on s.gasstation_id = g.gasstation_id
-    where s.gasstation_id = any(?) and s.product_id = any(?) and s.date_key between ? and ?
+    where s.gasstation_id = any(?) and s.date_key between ? and ?
     group by 1, 2, 3, 4
-""", (S, P, k0, k1))
+""", (S, k0, k1))
 
 if guard(mix):
-    c1, c2 = st.columns([1, 1.3])
-    with c1:
-        TYPE_COLOR = {"Gasoline": BLUE, "Diesel": ORANGE, "Lubricant": AQUA}
-        overall = mix.groupby("product_type")["sales_value"].sum().reset_index()
-        overall["pct"] = overall["sales_value"] / overall["sales_value"].sum() * 100
-        by_station_pct = (mix.groupby(["gasstation_id", "product_type"])["sales_value"].sum()
-                           .groupby(level=0).apply(lambda s: s / s.sum() * 100))
-        spread = by_station_pct.groupby("product_type").std().max()
-        fig = go.Figure(go.Bar(
-            x=overall.sales_value, y=overall.product_type, orientation="h",
-            marker_color=[TYPE_COLOR.get(t, MUTED) for t in overall.product_type],
-            text=[f"{p:.1f}%" for p in overall.pct], textposition="outside",
-            textfont=dict(color=INK),
-            hovertemplate="%{y}<br>%{x:,.0f} ₫<extra></extra>"))
-        fig.update_xaxes(title_text="ยอดขายรวมทุกสถานีที่เลือก (₫)")
-        fig.update_yaxes(title_text="")
-        st.plotly_chart(style(fig, 260, False), width="stretch")
-        st.caption(f"สัดส่วนนี้แทบไม่ต่างกันระหว่างสถานี (ส่วนเบี่ยงเบนมาตรฐานสูงสุด ±{spread:.1f} "
-                   "จุดเปอร์เซ็นต์) จึงไม่จำเป็นต้องแตกกราฟรายสถานี")
-    with c2:
-        top_per_station = (mix.sort_values("liters", ascending=False)
-                            .drop_duplicates("gasstation_id")
-                            .merge(mix.groupby("gasstation_id")["liters"].sum().rename("station_total"),
-                                   on="gasstation_id"))
-        top_per_station["ส่วนแบ่งในสถานี"] = (top_per_station["liters"] / top_per_station["station_total"]
-                                              * 100).round(1).astype(str) + "%"
-        tbl = (top_per_station[["gasstation_name", "product_name", "liters", "ส่วนแบ่งในสถานี"]]
-               .rename(columns={"gasstation_name": "สถานี", "product_name": "สินค้าขายดีสุด",
-                                 "liters": "ปริมาณ (ลิตร)"})
-               .sort_values("ปริมาณ (ลิตร)", ascending=False))
-        tbl["ปริมาณ (ลิตร)"] = tbl["ปริมาณ (ลิตร)"].map(lambda v: f"{v:,.0f}")
-        st.dataframe(tbl, width="stretch", hide_index=True, height=300)
-        counts = top_per_station["product_name"].value_counts()
-        summary = " · ".join(f"{name} เป็นสินค้าขายดีสุดใน {n} สถานี" for name, n in counts.items())
-        st.caption(summary)
+    top_stations = mix.groupby("gasstation_name")["sales_value"].sum().nlargest(15).index
+    mix_top = mix[mix["gasstation_name"].isin(top_stations)]
+    by_type = (mix_top.groupby(["gasstation_name", "product_type"])["sales_value"]
+               .sum().reset_index())
+    order = (by_type.groupby("gasstation_name")["sales_value"].sum()
+             .sort_values().index.tolist())
+    TYPE_COLOR = {"Gasoline": BLUE, "Diesel": ORANGE, "Lubricant": AQUA}
+    top_product = (mix_top.sort_values("sales_value", ascending=False)
+                   .drop_duplicates("gasstation_name").set_index("gasstation_name")["product_name"])
+    fig = go.Figure()
+    for ptype in ["Gasoline", "Diesel", "Lubricant"]:
+        sub = by_type[by_type["product_type"] == ptype].set_index("gasstation_name").reindex(order)
+        fig.add_trace(go.Bar(
+            x=sub["sales_value"], y=sub.index, orientation="h", name=ptype,
+            marker_color=TYPE_COLOR.get(ptype, MUTED),
+            customdata=[[top_product.get(g, "—")] for g in sub.index],
+            hovertemplate="%{y} · " + ptype + "<br>%{x:,.0f} ₫<br>สินค้าขายดีสุด: %{customdata[0]}"
+                          "<extra></extra>"))
+    fig.update_layout(barmode="stack", legend_title_text="กลุ่มสินค้า")
+    fig.update_xaxes(title_text="ยอดขาย (₫)")
+    fig.update_yaxes(title_text="")
+    st.plotly_chart(style(fig, 460, True), width="stretch")
 
 # ===========================================================================
-# ส่วนที่ 3 — รูปแบบเวลาการขาย  (Q3, Q5, Q10)
+# ส่วนที่ 3 — รูปแบบเวลาการขาย
 # ===========================================================================
 panel("รูปแบบเวลาการขาย: ชั่วโมง × วันในสัปดาห์",
-      '<span class="q-tag">Q3</span><span class="q-tag">Q5</span><span class="q-tag">Q10</span>',
-      "Heatmap ชั่วโมง×วัน เป็นรูปแบบมาตรฐานสำหรับข้อมูลบนกริดสองมิติ — ช่องสีเข้มสุดคือชั่วโมงพีค (Q3) "
-      "แถวเสาร์-อาทิตย์เทียบกับจันทร์-ศุกร์บอกความต่างวันธรรมดา/สุดสัปดาห์ได้ในภาพเดียว (Q5) "
-      "และแถวที่มีสีเข้มโดยรวมมากที่สุดคือวันที่ขายดีที่สุดในรอบสัปดาห์ (Q10)")
+      "Heatmap แสดงความหนาแน่นของการออกบิลตามชั่วโมงและวันในสัปดาห์ ช่องสีเข้มคือช่วงเวลาที่มีบิลหนาแน่นที่สุด "
+      "เปรียบเทียบวันธรรมดากับวันหยุดสุดสัปดาห์ และดูวันที่ขายดีที่สุดในรอบสัปดาห์ได้จากภาพเดียว")
 
 heat = q("""
     select d.weekday_name, f.hour_of_day, count(*) as bill_count
@@ -407,13 +372,11 @@ if guard(heat):
     st.plotly_chart(style(fig, 380, False), width="stretch")
 
 # ===========================================================================
-# ส่วนที่ 4 — ช่องทางการชำระเงิน  (Q4, Q14)
+# ส่วนที่ 4 — ช่องทางการชำระเงิน
 # ===========================================================================
 panel("ช่องทางการชำระเงินและต้นทุนค่าธรรมเนียม",
-      '<span class="q-tag">Q4</span><span class="q-tag">Q14</span>',
-      "แท่งสัดส่วนเงินสด/บัตรเครดิตต่อสถานี ตอบพฤติกรรมการชำระเงิน (Q4) โดยตรง "
-      "ส่วนต้นทุนค่าธรรมเนียมบัตรเครดิตจำลองที่ 2% (Q14) เป็นตัวเลขเดียวที่คำนวณต่อจากข้อมูลชุดเดียวกัน "
-      "จึงแสดงเป็นค่าสรุปแทนการทำกราฟแยก")
+      "แท่งสัดส่วนเงินสด/บัตรเครดิตของยอดขายรวม พร้อมต้นทุนค่าธรรมเนียมบัตรเครดิตจำลองที่อัตรา 2% "
+      "ซึ่งคำนวณต่อจากข้อมูลชุดเดียวกัน แสดงเป็นค่าสรุปโดยไม่ต้องทำกราฟแยก")
 
 pay = q("""
     select payment_method_key, count(*) as bill_count, sum(total_amount) as total_amount
@@ -451,14 +414,12 @@ if guard(pay):
             f'({cc_amount:,.0f} ₫ ชำระด้วยบัตรเครดิต)</div></div>', unsafe_allow_html=True)
 
 # ===========================================================================
-# ส่วนที่ 5 — ประสิทธิภาพบุคลากร  (Q6, Q13, Q15)
+# ส่วนที่ 5 — ประสิทธิภาพบุคลากร
 # ===========================================================================
 panel("ประสิทธิภาพและโครงสร้างกำลังพล",
-      '<span class="q-tag">Q6</span><span class="q-tag">Q13</span><span class="q-tag">Q15</span>',
-      "Scatter เปรียบเทียบยอดขายต่อพนักงาน (แกน Y) กับภาระงานต่อพนักงานเติมน้ำมัน 1 คน (แกน X) — "
-      "จุดมุมขวาบนคือสถานีที่ทั้งมีประสิทธิภาพสูงและมีภาระงานหนัก ตอบ Q15 ได้ตรงประเด็นกว่าดูยอดขายอย่างเดียว "
-      "ส่วนโครงสร้างตำแหน่งงาน (Q13) และพนักงานออกบิลมากสุด (Q6) ของสถานีที่เลือก แสดงเป็นตารางด้านล่าง "
-      "เพราะเป็นข้อมูลระดับรายละเอียดที่ตารางอ่านง่ายกว่ากราฟ")
+      "Scatter เปรียบเทียบยอดขายต่อพนักงาน (แกน Y) กับภาระงานต่อพนักงานเติมน้ำมัน 1 คน (แกน X) "
+      "จุดมุมขวาบนคือสถานีที่มีประสิทธิภาพสูงและภาระงานหนัก "
+      "โครงสร้างตำแหน่งงานและพนักงานออกบิลสูงสุดของสถานีที่เลือกแสดงเป็นตารางด้านล่าง")
 
 rev = q("""
     select gasstation_id, sum(total_amount) as total_sales, count(*) as invoice_count
@@ -500,14 +461,14 @@ if guard(eff):
 
     d1, d2 = st.columns(2)
     with d1:
-        st.caption(f"โครงสร้างตำแหน่งงาน — {sel} (Q13)")
+        st.caption(f"โครงสร้างตำแหน่งงาน — {sel}")
         pos = q("""select position, count(*) as headcount from dim_employee
                    where home_gasstation_id = ? group by 1 order by 2 desc""", (sid,))
         pos["สัดส่วน"] = (pos["headcount"] / pos["headcount"].sum() * 100).round(1).astype(str) + "%"
         st.dataframe(pos.rename(columns={"position": "ตำแหน่ง", "headcount": "จำนวน (คน)"}),
                      width="stretch", hide_index=True)
     with d2:
-        st.caption(f"พนักงานออกบิลสูงสุด — {sel} (Q6)")
+        st.caption(f"พนักงานออกบิลสูงสุด — {sel}")
         top_emp = q("""
             select e.employee_name as ชื่อพนักงาน, e.position as ตำแหน่ง,
                    count(*) as "จำนวนบิล"
@@ -518,11 +479,11 @@ if guard(eff):
         st.dataframe(top_emp, width="stretch", hide_index=True)
 
 # ===========================================================================
-# ส่วนที่ 6 — สุขภาพถังเก็บน้ำมัน  (Q12)
+# ส่วนที่ 6 — สุขภาพถังเก็บน้ำมัน
 # ===========================================================================
-panel("ระดับน้ำมันคงเหลือในถัง (ข้อมูล ณ ปัจจุบัน)", '<span class="q-tag">Q12</span>',
-      "แท่งวัดระดับเทียบเกณฑ์ (bullet chart) — เส้นประคือเกณฑ์เตือนภัยที่ 20% ของความจุ "
-      "แท่งที่ต่ำกว่าเส้นถูกเน้นด้วยสีสถานะ (แดง) ส่วนถังปกติใช้สีน้ำเงินตามระบบ "
+panel("ระดับน้ำมันคงเหลือในถัง (ข้อมูล ณ ปัจจุบัน)",
+      "แท่งวัดระดับเทียบเกณฑ์ เส้นประคือเกณฑ์เตือนภัยที่ 20% ของความจุ "
+      "แท่งที่ต่ำกว่าเส้นถูกเน้นด้วยสีแดง ส่วนถังปกติใช้สีน้ำเงินตามระบบ "
       "ไม่ผูกกับช่วงวันที่ที่เลือกด้านบน เพราะเป็นค่าล่าสุด ณ ขณะนี้ ไม่ใช่ตัวเลขสะสมย้อนหลัง")
 
 tanks = q("""
@@ -553,12 +514,11 @@ if guard(tanks):
     st.plotly_chart(style(fig, 460, False), width="stretch")
 
 # ===========================================================================
-# ส่วนที่ 7 — การกระทบยอด จ่ายออก vs ขายจริง  (Q11)
+# ส่วนที่ 7 — การกระทบยอด จ่ายออก vs ขายจริง
 # ===========================================================================
-panel("ส่วนต่างปริมาณจ่ายออกจากถัง เทียบ ยอดขายจริง", '<span class="q-tag">Q11</span>',
-      "แท่งสองทิศทาง (diverging bar) รอบเส้นศูนย์ — เหมาะกับข้อมูลที่มีทั้งค่าบวก/ลบเทียบเส้นฐาน "
-      "แท่งเกินศูนย์ (น้ำเงิน) หมายถึงจ่ายออกมากกว่าขาย แท่งต่ำกว่าศูนย์ (แดง) "
-      "หมายถึงขายมากกว่าที่บันทึกว่าจ่ายออก ซึ่งเป็นจุดที่ควรตรวจสอบ")
+panel("ส่วนต่างปริมาณจ่ายออกจากถัง เทียบ ยอดขายจริง",
+      "แท่งสองทิศทางรอบเส้นศูนย์ แท่งเกินศูนย์ (น้ำเงิน) หมายถึงจ่ายออกมากกว่าขาย "
+      "แท่งต่ำกว่าศูนย์ (แดง) หมายถึงขายมากกว่าที่บันทึกว่าจ่ายออก ซึ่งเป็นจุดที่ควรตรวจสอบเพิ่มเติม")
 
 recon = q("""
     with sold as (
