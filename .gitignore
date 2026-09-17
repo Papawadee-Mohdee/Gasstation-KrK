@@ -9,22 +9,18 @@ __pycache__/
 logs/
 target/
 
+# DuckDB Database files
+*.duckdb
+*.duckdb.wal
+
 # Operating System Files
 .DS_Store
 Thumbs.db
 
-# VS Code
+# VS Code & Environment Variables
 .vscode/
+.env
 
-# Environment Variables
-.env.venv/
+# Project Archives & Data
 GasStationDB.zip
 GasStationDB/
-.venv/
-.venv/
-<<<<<<< HEAD
-*.duckdb
-*.duckdb.wal
-=======
-.venv/
->>>>>>> a9b7e47 (ignore venv)
