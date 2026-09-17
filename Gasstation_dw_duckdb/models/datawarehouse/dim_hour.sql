@@ -6,7 +6,7 @@ with hours as (
 
 select
     h.hour_of_day,
-    coalesce(b.day_part_label, case
+    coalesce(cast(b.day_part_label as varchar), case
         when h.hour_of_day between 6  and 10 then 'เช้า'
         when h.hour_of_day between 11 and 13 then 'เที่ยง'
         when h.hour_of_day between 14 and 17 then 'บ่าย'
