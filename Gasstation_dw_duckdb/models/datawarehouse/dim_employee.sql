@@ -1,17 +1,29 @@
 {{ config(materialized='table') }}
-with valid_employees as (
+
+with source as (
+
     select
-        employee_id,
-        employee_name,
-        position,
-        gasstation_id as home_gasstation_id,   -- attribute เท่านั้น ไม่ใช่สถานีบันทึกบิล
-        phone_number,
-        email,
-        start_date,
-        address
+        EmployeeID as employee_id,
+        EmployeeName as employee_name,
+        Position as position,
+        GasStationID as home_gasstation_id,
+        PhoneNumber as phone_number,
+        Email as email,
+        cast(StartDate as date) as start_date,
+        Address as address,
+        current_localtimestamp() as insertion_timestamp
     from {{ ref('stg_Employee') }}
-    where not has_required_value_error
+    where EmployeeID is not null
+
+),
+
+unique_source as (
+    select *,
+        row_number() over (partition by employee_id) as row_num
+    from source
 )
-select *, false as is_unknown_member from valid_employees
-union all
-select -1, 'Unknown Employee', null, null, null, null, null, null, true
+
+select *
+exclude (row_num)
+from unique_source
+where row_num = 1
