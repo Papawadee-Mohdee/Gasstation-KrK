@@ -46,154 +46,136 @@
 
 ---
 
-## 2. แนวคิดพื้นฐาน: Dimension และ Fact
+# เอกสารประกอบโครงการ Data Warehouse (Gas Station System)
+
+โครงการนี้เป็นระบบคลังข้อมูล (Data Warehouse) สำหรับเครือข่ายสถานีบริการน้ำมัน สร้างด้วย **dbt (data build tool)** และ **DuckDB** โดยแปลงข้อมูลธุรกรรมดิบจากระบบปฏิบัติการ (OLTP) ได้แก่ ข้อมูลลูกค้า พนักงาน สถานีบริการ สินค้า ใบเสร็จ รายการขาย ถังเก็บน้ำมัน และธุรกรรมคลังน้ำมัน ให้กลายเป็นแบบจำลองเชิงมิติ (Dimensional Model) ที่พร้อมสำหรับการวิเคราะห์และสร้างรายงาน
+
+ชุดข้อมูลต้นทางมาจาก **GasStationDB** (นครโฮจิมินห์) จาก Kaggle ครอบคลุมช่วงเวลา 24 วัน (15 มีนาคม – 7 เมษายน 2024) ประกอบด้วยตารางดิบ 8 ตาราง และตารางอ้างอิงเสริม (seed) อีก 5 ตาราง ผลลัพธ์สุดท้ายของคลังข้อมูลนี้ถูกนำไปใช้ตอบคำถามทางธุรกิจ 15 ข้อ (ผ่านตาราง mart) และใช้ขับเคลื่อนแดชบอร์ดวิเคราะห์ (Streamlit) แบบโต้ตอบได้
+
+---
+
+## สารบัญ
+
+- [1. บทนำ](#1-บทนำ)
+- [2. แนวคิดพื้นฐาน: Dimension และ Fact คืออะไร](#2-แนวคิดพื้นฐาน-dimension-และ-fact-คืออะไร)
+  - [2.1 Dimension Table (ตารางมิติ)](#21-dimension-table-ตารางมิติ)
+  - [2.2 Fact Table (ตารางข้อเท็จจริง)](#22-fact-table-ตารางข้อเท็จจริง)
+  - [2.3 ความสัมพันธ์ระหว่าง Dimension และ Fact](#23-ความสัมพันธ์ระหว่าง-dimension-และ-fact)
+- [3. โครงสร้าง Data Cube ของโปรเจกต์นี้](#3-โครงสร้าง-data-cube-ของโปรเจกต์นี้)
+  - [3.1 ตาราง Fact ทั้ง 3 ตัว](#31-ตาราง-fact-ทั้ง-3-ตัว)
+  - [3.2 Dimension ที่ใช้ร่วมกัน (Conformed Dimensions)](#32-dimension-ที่ใช้ร่วมกัน-conformed-dimensions)
+  - [3.3 ตาราง Bridge](#33-ตาราง-bridge)
+- [4. กระบวนการ ELT (Extract – Load – Transform)](#4-กระบวนการ-elt-extract--load--transform)
+  - [4.1 Extract (สกัดข้อมูล)](#41-extract-สกัดข้อมูล)
+  - [4.2 Load (โหลดข้อมูล)](#42-load-โหลดข้อมูล)
+  - [4.3 Transform (แปลงข้อมูล)](#43-transform-แปลงข้อมูล)
+- [5. รายละเอียด Staging Layer](#5-รายละเอียด-staging-layer)
+- [6. รายละเอียด Dimension Tables](#6-รายละเอียด-dimension-tables)
+- [7. รายละเอียด Bridge Table](#7-รายละเอียด-bridge-table)
+- [8. รายละเอียด Fact Tables](#8-รายละเอียด-fact-tables)
+- [9. รายละเอียด Intermediate Tables](#9-รายละเอียด-intermediate-tables)
+- [10. รายละเอียด Data Mart](#10-รายละเอียด-data-mart)
+- [11. สรุปภาพรวมทั้งระบบ](#11-สรุปภาพรวมทั้งระบบ)
+
+---
+
+## 1. บทนำ
+
+โครงการนี้เป็นระบบคลังข้อมูล (Data Warehouse) สำหรับเครือข่ายสถานีบริการน้ำมัน สร้างด้วย **dbt** และ **DuckDB** โดยแปลงข้อมูลธุรกรรมดิบจากระบบปฏิบัติการ (OLTP) ได้แก่ ข้อมูลลูกค้า พนักงาน สถานีบริการ สินค้า ใบเสร็จ รายการขาย ถังเก็บน้ำมัน และธุรกรรมคลังน้ำมัน ให้กลายเป็นแบบจำลองเชิงมิติ (Dimensional Model) ที่พร้อมสำหรับการวิเคราะห์และสร้างรายงาน
+
+ชุดข้อมูลต้นทางมาจาก **GasStationDB** (นครโฮจิมินห์) จาก Kaggle ครอบคลุมช่วงเวลา 24 วัน (15 มีนาคม – 7 เมษายน 2024) ประกอบด้วยตารางดิบ 8 ตาราง และตารางอ้างอิงเสริม (seed) อีก 5 ตาราง ผลลัพธ์สุดท้ายของคลังข้อมูลนี้ถูกนำไปใช้ตอบคำถามทางธุรกิจ 15 ข้อ (ผ่านตาราง mart) และใช้ขับเคลื่อนแดชบอร์ดวิเคราะห์ (Streamlit) แบบโต้ตอบได้
+
+---
+
+## 2. แนวคิดพื้นฐาน: Dimension และ Fact คืออะไร
 
 ### 2.1 Dimension Table (ตารางมิติ)
-เก็บข้อมูลเชิงพรรณนา (Descriptive Attributes) ของสิ่งที่เราต้องการใช้อธิบายหรือกรองข้อมูล เช่น ใคร (ลูกค้า, พนักงาน), อะไร (สินค้า), ที่ไหน (สถานี), เมื่อไหร่ (วันที่, ชั่วโมง)[cite: 1, 2]
-* แต่ละแถวแทน 1 หน่วยจริงที่ไม่ซ้ำกัน และมี Primary Key (เช่น `customer_id`, `product_id`)[cite: 1, 2]
-* มีจำนวนแถวค่อนข้างคงที่และเปลี่ยนแปลงช้า (Slowly Changing) เมื่อเทียบกับตาราง Fact[cite: 1, 2]
-* ใช้เป็นตัวกรอง (`WHERE`) หรือตัวจัดกลุ่ม (`GROUP BY`) เวลาวิเคราะห์ข้อมูล[cite: 1, 2]
-* **การแบ่งกลุ่มในโปรเจกต์นี้:**
-  * **กลุ่มโหลดจากข้อมูลธุรกรรมจริง:** `dim_customer`, `dim_employee`, `dim_gasstation`, `dim_product`, `dim_tank`[cite: 1, 2]
-  * **กลุ่มสร้างขึ้นเอง / มาจากตารางอ้างอิง:** `dim_date`, `dim_hour`, `dim_payment_method`, `dim_vehicle_category`[cite: 1, 2]
+Dimension table เก็บ **"ข้อมูลเชิงพรรณนา" (descriptive attributes)** ของสิ่งที่เราต้องการใช้อธิบายหรือกรองข้อมูล เช่น ใคร (ลูกค้า, พนักงาน), อะไร (สินค้า), ที่ไหน (สถานี), เมื่อไหร่ (วันที่, ชั่วโมง) 
+
+คุณสมบัติสำคัญของ dimension table มีดังนี้:
+* แต่ละแถวแทน **1 หน่วยจริงที่ไม่ซ้ำกัน** (เช่น ลูกค้า 1 คน, สินค้า 1 รายการ) และมีคีย์หลัก (เช่น `customer_id`, `product_id`) ที่ไม่ซ้ำกันในตาราง
+* มีจำนวนแถวค่อนข้างคงที่และเปลี่ยนแปลงช้า (Slowly Changing) เมื่อเทียบกับตาราง fact
+* ใช้เป็นตัวกรอง (`WHERE`) หรือตัวจัดกลุ่ม (`GROUP BY`) เวลาวิเคราะห์ข้อมูล เช่น "ยอดขายแยกตามสถานี" หรือ "ยอดขายแยกตามประเภทรถของลูกค้า"
+* ในโปรเจกต์นี้ dimension แบ่งเป็น 2 กลุ่ม: 
+  * **กลุ่มที่โหลดมาจากข้อมูลธุรกรรมจริง:** `dim_customer`, `dim_employee`, `dim_gasstation`, `dim_product`, `dim_tank`
+  * **กลุ่มที่สร้างขึ้นเอง / มาจากตารางอ้างอิง:** `dim_date`, `dim_hour`, `dim_payment_method`, `dim_vehicle_category`
 
 ### 2.2 Fact Table (ตารางข้อเท็จจริง)
-เก็บเหตุการณ์หรือธุรกรรมที่วัดผลเป็นตัวเลขได้ (Measures) เช่น ยอดขาย, จำนวนที่ขาย, ปริมาณน้ำมันที่จ่ายออก[cite: 1, 2]
-* แต่ละแถวแทน 1 เหตุการณ์ที่เกิดขึ้นจริง เรียกว่า Grain (ระดับความละเอียด)[cite: 1, 2]
-* มี Foreign Key ชี้ไปยัง Dimension ต่างๆ และมีคอลัมน์วัดผล เช่น `total_amount`, `quantity_sold`[cite: 1, 2]
-* มีจำนวนแถวมากและเติบโตเร็ว (เช่น `fact_sales` มีมากกว่า 1.5 ล้านแถว จากข้อมูลเพียง 24 วัน)[cite: 1, 2]
-* **Fact Table ในโปรเจกต์นี้มี 3 ตัว:** `fact_invoice` (ระดับใบเสร็จ), `fact_sales` (ระดับรายการสินค้าในใบเสร็จ) และ `fact_inventory_transaction` (ระดับธุรกรรมคลังน้ำมัน)[cite: 1, 2]
+Fact table เก็บ **"เหตุการณ์" หรือ "ธุรกรรม"** ที่วัดผลเป็นตัวเลขได้ (measures) เช่น ยอดขาย จำนวนที่ขาย ปริมาณน้ำมันที่จ่ายออก 
+
+คุณสมบัติสำคัญประกอบด้วย:
+* แต่ละแถวแทน **1 เหตุการณ์ที่เกิดขึ้นจริง** (เช่น 1 ใบเสร็จ, 1 รายการสินค้าที่ขาย, 1 ธุรกรรมคลัง) เรียกยานี้ว่า **grain (ระดับความละเอียด)** ของตาราง fact
+* มีคอลัมน์ที่เป็น foreign key ชี้ไปยัง dimension table ต่างๆ ที่เกี่ยวข้อง (เช่น `gasstation_id`, `product_id`, `date_key`) และมีคอลัมน์ที่เป็นตัวเลขวัดผล (measure) เช่น `total_amount`, `quantity_sold`
+* มีจำนวนแถวมากและเติบโตเร็วตามธุรกรรมที่เกิดขึ้นจริง (`fact_sales` ในโปรเจกต์นี้มีมากกว่า 1.5 ล้านแถว จากข้อมูลเพียง 24 วัน)
+* ในโปรเจกต์นี้มี fact table 3 ตัว: `fact_invoice` (ระดับใบเสร็จ), `fact_sales` (ระดับรายการสินค้าในใบเสร็จ) และ `fact_inventory_transaction` (ระดับธุรกรรมคลังน้ำมัน)
 
 ### 2.3 ความสัมพันธ์ระหว่าง Dimension และ Fact
-ตาราง Fact จะอยู่ตรงกลาง ล้อมรอบด้วยตาราง Dimension ที่เชื่อมกันผ่าน Foreign Key มีลักษณะคล้ายดาวเรียกว่า Star Schema การวิเคราะห์ทำได้โดย `JOIN` ตาราง Fact เข้ากับ Dimension แล้ว `GROUP BY` ตามคอลัมน์ใน Dimension นั้น[cite: 1, 2]
+ตาราง fact จะอยู่ตรงกลาง ล้อมรอบด้วยตาราง dimension ที่เชื่อมกันผ่าน foreign key เมื่อวาดเป็นแผนภาพจะมีลักษณะคล้ายดาว (แต่ละแขนคือ dimension หนึ่งตัว) จึงเรียกรูปแบบนี้ว่า **Star Schema** 
+
+การวิเคราะห์ข้อมูลทำได้โดย `JOIN` ตาราง fact เข้ากับ dimension ที่ต้องการ แล้ว `GROUP BY` ตามคอลัมน์ใน dimension นั้น เช่น ต้องการ "ยอดขายรวมของแต่ละสถานี" ก็ `JOIN` ระหว่าง `fact_invoice` กับ `dim_gasstation` แล้ว `GROUP BY gasstation_name`
 
 ---
 
 ## 3. โครงสร้าง Data Cube ของโปรเจกต์นี้
 
-เนื่องจากมี Fact Table ถึง 3 ตัวที่ใช้ Dimension บางส่วนร่วมกัน (Conformed Dimensions) รูปแบบ Data Cube ของระบบนี้จึงเป็น **Galaxy Schema** (หรือ Fact Constellation Schema - กลุ่มดาวหลายดวงเชื่อมกัน)[cite: 1, 2]
+เนื่องจากโปรเจกต์นี้มีตาราง fact มากกว่า 1 ตัว (3 ตัว) ที่ใช้ dimension บางส่วนร่วมกัน (conformed dimensions) รูปแบบ Data Cube ของระบบนี้จึงเป็น **Galaxy Schema** หรือเรียกอีกชื่อว่า **Fact Constellation Schema** (กลุ่มดาวหลายดวงเชื่อมกัน) ไม่ใช่ Star Schema แบบธรรมดาที่มี fact เดียว
 
-### 3.1 แผนผัง Data Cube (Galaxy Schema Diagram)
-![Galaxy Schema](./Galaxy%20Schema.jpg)
-
-### 3.2 ตาราง Fact ทั้ง 3 ตัว
+### 3.1 ตาราง Fact ทั้ง 3 ตัว
 
 | Fact Table | Grain (ความละเอียด) | Dimension ที่เชื่อมด้วย |
 | :--- | :--- | :--- |
-| **fact_invoice** | 1 แถว = 1 ใบเสร็จ[cite: 1, 2] | `dim_gasstation`, `dim_customer`, `dim_employee`, `dim_payment_method`, `dim_date`, `dim_hour`[cite: 1, 2] |
-| **fact_sales** | 1 แถว = 1 รายการสินค้าในใบเสร็จ[cite: 1, 2] | `dim_gasstation`, `dim_customer`, `dim_employee`, `dim_product`, `dim_payment_method`, `dim_date`, `dim_hour`[cite: 1, 2] |
-| **fact_inventory_transaction** | 1 แถว = 1 ธุรกรรมคลังน้ำมัน[cite: 1, 2] | `dim_gasstation`, `dim_tank`, `dim_product` (ผ่าน `bridge_tank_product`), `dim_date`, `dim_hour`[cite: 1, 2] |
+| **fact_invoice** | 1 แถว = 1 ใบเสร็จ | `dim_gasstation`, `dim_customer`, `dim_employee`, `dim_payment_method`, `dim_date`, `dim_hour` |
+| **fact_sales** | 1 แถว = 1 รายการสินค้าในใบเสร็จ | `dim_gasstation`, `dim_customer`, `dim_employee`, `dim_product`, `dim_payment_method`, `dim_date`, `dim_hour` |
+| **fact_inventory_transaction** | 1 แถว = 1 ธุรกรรมคลังน้ำมัน | `dim_gasstation`, `dim_tank`, `dim_product` (ผ่าน `bridge_tank_product`), `dim_date`, `dim_hour` |
 
-### 3.3 Dimension ที่ใช้ร่วมกัน (Conformed Dimensions) และ ตาราง Bridge
-* **Conformed Dimensions:** `dim_gasstation`, `dim_date`, `dim_hour` และ `dim_product` เป็น Conformed Dimensions ที่ถูกใช้ร่วมกันโดยมากกว่า 1 ตาราง Fact ทำให้สามารถเปรียบเทียบข้อมูลข้าม Fact ได้ ส่วน `dim_customer`, `dim_employee`, `dim_payment_method` ใช้เฉพาะกับ Fact ฝั่งการขาย และ `dim_tank` ใช้เฉพาะกับ Fact ฝั่งคลังน้ำมัน[cite: 1, 2]
-* **Bridge Table (`bridge_tank_product`):** รวมการจับคู่ถัง-สินค้าจาก 2 แหล่ง ได้แก่ (1) การจับคู่ที่ตรวจทานด้วยมือจาก `stg_TankProductMap` (เฉพาะสถานะ `approved`) และ (2) การอนุมานจากชื่อถังเทียบกับชื่อสินค้าสำหรับถังที่ไม่มีข้อมูล เพื่อให้ถังทุกใบมีสินค้าจับคู่ครบถ้วน[cite: 1, 2]
+### 3.2 Dimension ที่ใช้ร่วมกัน (Conformed Dimensions)
+`dim_gasstation`, `dim_date`, `dim_hour` และ `dim_product` เป็น conformed dimension คือถูกใช้ร่วมกันโดยมากกว่า 1 ตาราง fact ทำให้สามารถเปรียบเทียบข้อมูลข้าม fact ได้ (เช่น เทียบยอดขายจาก `fact_sales` กับปริมาณจ่ายออกจาก `fact_inventory_transaction` ในช่วงวันเดียวกัน ผ่าน `dim_date` ร่วมกัน) 
+
+ส่วน `dim_customer`, `dim_employee` และ `dim_payment_method` ใช้เฉพาะกับ `fact_invoice`/`fact_sales` และ `dim_tank` ใช้เฉพาะกับ `fact_inventory_transaction`
+
+### 3.3 ตาราง Bridge
+เนื่องจากข้อมูลดิบไม่มีความสัมพันธ์โดยตรงระหว่างถังเก็บน้ำมัน (`tank`) กับสินค้า/ชนิดน้ำมัน (`product`) จึงต้องมีตาราง `bridge_tank_product` ทำหน้าที่เป็นตัวกลางเชื่อม `dim_tank` เข้ากับ `dim_product` ก่อนที่ `fact_inventory_transaction` จะระบุ `product_id` ได้
 
 ---
 
 ## 4. กระบวนการ ELT (Extract – Load – Transform)
 
-โปรเจกต์นี้ใช้แนวทาง ELT คือโหลดข้อมูลดิบเข้าฐานข้อมูลก่อน แล้วค่อยแปลงด้วยคำสั่ง SQL ภายในฐานข้อมูลเองผ่าน dbt[cite: 1, 2]
+โปรเจกต์นี้ใช้แนวทาง **ELT** (ตรงข้ามกับ ETL แบบดั้งเดิม) คือโหลดข้อมูลดิบเข้าฐานข้อมูลก่อน แล้วค่อยแปลง (Transform) ด้วยคำสั่ง SQL ภายในฐานข้อมูลเอง (ผ่าน dbt) แทนที่จะแปลงข้อมูลก่อนโหลด
 
-1. **Extract (สกัดข้อมูล):** CSV ดิบ 8 ไฟล์ (`Customer`, `Employee`, `GasStation`, `Invoice`, `InvoiceDetail`, `Product`, `StorageTank`, `InventoryTransaction`) และไฟล์ Seed 5 ไฟล์ (`ref_vehicle_category`, `ref_product_policy`, `ref_hour_bucket`, `ref_data_coverage`, `ref_tank_product_map`)[cite: 1, 2]
-2. **Load (โหลดข้อมูล):** โหลดเข้า DuckDB เป็นสคีมา `main` โดยทุกคอลัมน์ถูกเก็บเป็น `VARCHAR` ทั้งหมด (ข้อมูล Seed โหลดผ่าน `dbt seed`)[cite: 1, 2]
-3. **Transform (แปลงข้อมูล):** แปลงข้อมูลเป็นชั้นๆ (Layers) ผ่าน dbt models ตามสาย Dependency ที่ dbt จัดลำดับให้อัตโนมัติ[cite: 1, 2]
+### 4.1 Extract (สกัดข้อมูล)
+ข้อมูลต้นทางเป็นไฟล์ CSV 8 ไฟล์ที่แทนตารางในระบบ OLTP ได้แก่ `Customer.csv`, `Employee.csv`, `GasStation.csv`, `Invoice.csv`, `InvoiceDetail.csv`, `Product.csv`, `StorageTank.csv` และ `InventoryTransaction.csv` รวมถึงไฟล์ CSV อ้างอิงเพิ่มเติม (seed) อีก 5 ไฟล์ที่ทีมงานสร้างขึ้นเอง (`ref_vehicle_category`, `ref_product_policy`, `ref_hour_bucket`, `ref_data_coverage`, `ref_tank_product_map`)
 
-### โครงสร้างและหน้าที่ของแต่ละชั้น (Layers)
+### 4.2 Load (โหลดข้อมูล)
+ไฟล์ CSV ทั้ง 8 ไฟล์ถูกโหลดเข้า DuckDB เป็นตารางในสคีมา `main` โดย **ทุกคอลัมน์ถูกเก็บเป็นชนิดข้อความ (`VARCHAR`) ทั้งหมด** ไม่มีการแปลงชนิดข้อมูลใดๆ ในขั้นตอนนี้ ตารางเหล่านี้ถูกอ้างอิงในโปรเจกต์ dbt ผ่าน `source()` (ประกาศไว้ในไฟล์ `src_gas.yml`) ส่วนไฟล์ seed ทั้ง 5 ไฟล์ถูกโหลดผ่านคำสั่ง `dbt seed` ซึ่ง dbt จะพยายามเดาชนิดข้อมูลให้จากเนื้อหาจริงในไฟล์ (จึงมักจะได้ชนิดข้อมูลที่ถูกต้องกว่า)
 
-| ชั้น (Layer) | โฟลเดอร์ | หน้าที่หลัก |
+การที่ตาราง source เก็บทุกคอลัมน์เป็น `VARCHAR` หมด ทำให้ขั้นตอน Transform ในชั้น staging ต้องรับผิดชอบแปลงชนิดข้อมูลให้ถูกต้องก่อนนำไปคำนวณต่อ (ดูหัวข้อ 5)
+
+### 4.3 Transform (แปลงข้อมูล)
+การแปลงข้อมูลทำเป็นชั้นๆ (layers) ผ่าน dbt models โดยแต่ละชั้นอ้างอิง (`ref`) ชั้นก่อนหน้า ทำให้เกิดเป็นสาย dependency ที่ dbt จัดลำดับการรันให้อัตโนมัติ:
+
+| ชั้น (Layer) | โฟลเดอร์ | หน้าที่ |
 | :--- | :--- | :--- |
-| **Staging** | `models/staging/`[cite: 1, 2] | ดึงข้อมูลจาก Source/Seed มาตรงๆ, แปลงชนิดข้อมูลเฉพาะที่จำเป็น, ใส่ `ingestion_timestamp`[cite: 1, 2] |
-| **Dimension / Fact** | `models/datawarehouse/`[cite: 1, 2] | Join, คัดกรองข้อมูลซ้ำ, เปลี่ยนชื่อคอลัมน์ให้เป็นแบบจำลองเชิงมิติ[cite: 1, 2] |
-| **Intermediate** | `models/datawarehouse/`[cite: 1, 2] | พรีคำนวณผลรวมที่ใช้ซ้ำในหลาย Mart[cite: 1, 2] |
-| **Mart** | `models/datawarehouse/`[cite: 1, 2] | ตารางสรุปสุดท้าย ตอบคำถามทางธุรกิจแต่ละข้อโดยตรง[cite: 1, 2] |
+| **Staging** | `models/staging/` | ดึงข้อมูลจาก source/seed มาตรงๆ, แปลงชนิดข้อมูลเฉพาะคอลัมน์ที่จำเป็น, ใส่ `ingestion_timestamp` |
+| **Dimension / Fact** | `models/datawarehouse/` | join / คัดข้อมูลซ้ำ / เปลี่ยนชื่อคอลัมน์จาก staging ให้เป็นแบบจำลองเชิงมิติ |
+| **Intermediate** | `models/datawarehouse/` | พรีคำนวณผลรวมที่ใช้ซ้ำในหลาย mart |
+| **Mart** | `models/datawarehouse/` | ตารางสรุปสุดท้าย ตอบคำถามทางธุรกิจแต่ละข้อโดยตรง |
 
-> **คำสั่งที่ใช้รันโปรเจกต์:**
-> ```bash
-> dbt seed    # โหลดตารางอ้างอิง
-> dbt run     # รัน staging → dimension/fact → intermediate → mart
-> dbt test    # ตรวจสอบคุณภาพข้อมูล (Data Quality Tests)
-> ```
+คำสั่งที่ใช้รันกระบวนการทั้งหมด: `dbt seed` (โหลดตารางอ้างอิง) ตามด้วย `dbt run` (รัน staging → dimension/fact → intermediate → mart ตามลำดับ dependency) และ `dbt test` (ตรวจสอบคุณภาพข้อมูล เช่น ค่าไม่ซ้ำ ไม่เป็นค่าว่าง ตามที่กำหนดไว้ใน `schema.yml`)
 
 ---
 
-## 5. รายละเอียดเชิงลึกของแต่ละโมเดล (Model Details)
+## 5. รายละเอียด Staging Layer
 
-### 5.1 Staging Layer
-โมเดลทุกตัวใช้รูปแบบ `SELECT *` จาก Source/Seed พร้อมเพิ่ม `ingestion_timestamp` และแปลงชนิดข้อมูลเฉพาะคอลัมน์ที่จำเป็น[cite: 1, 2]:
-* **`stg_Customer`**, **`stg_Employee`**, **`stg_GasStation`**, **`stg_Product`**: โหลดข้อมูลดิบพร้อมใส่ Timestamp[cite: 1, 2]
-* **`stg_Invoice`**: แปลง `TotalAmount` จาก Text เป็น Double[cite: 1, 2]
-* **`stg_InvoiceDetail`**: แปลง `QuantitySold`, `SellingPrice`, `TotalPrice` จาก Text เป็น Double[cite: 1, 2]
-* **`stg_StorageTank`**: แปลง `TankID` เป็น Bigint และ `Capacity`/`CurrentQuantity` เป็น Double[cite: 1, 2]
-* **`stg_InventoryTransaction`**: แปลง `TankID` เป็น Bigint และปริมาณต่างๆ เป็น Double[cite: 1, 2]
-* **`stg_TankProductMap`**: โหลดจาก Seed พร้อมแปลงวันที่ด้วย `try_cast` ป้องกันค่าว่าง[cite: 1, 2]
+โมเดลในชั้นนี้ทุกตัวมีรูปแบบเดียวกัน: `select *` จาก source/seed แล้วเพิ่มคอลัมน์ `ingestion_timestamp` (เวลาที่ดึงข้อมูล) โดยจะแปลงชนิดข้อมูล (`cast`) เฉพาะคอลัมน์ที่ถูกนำไปคำนวณเชิงตัวเลขหรือใช้เป็นคีย์เปรียบเทียบในขั้นตอนถัดไปเท่านั้น เพื่อให้โค้ดเรียบง่ายที่สุดเท่าที่จำเป็น
 
-### 5.2 Dimension Tables
-ใช้เทคนิค `ROW_NUMBER()` กรองข้อมูลซ้ำ (เอาแถวแรกที่สมบูรณ์ที่สุด) และเปลี่ยนชื่อคอลัมน์เป็นรูปแบบ `snake_case`[cite: 1, 2]:
-* **`dim_customer`**: เชื่อมข้อมูลหมวดหมู่ยานพาหนะจาก Seed `ref_vehicle_category`[cite: 1, 2]
-* **`dim_employee`**: แปลง `StartDate` เป็น Date[cite: 1, 2]
-* **`dim_gasstation`**: ข้อมูลสถานีบริการ[cite: 1, 2]
-* **`dim_product`**: เชื่อมข้อมูลการจัดประเภทเชื้อเพลิงจาก Seed `ref_product_policy`[cite: 1, 2]
-* **`dim_tank`**: เก็บสถานะปัจจุบันของถังเก็บน้ำมัน[cite: 1, 2]
-* **`dim_payment_method`**: สร้างจากค่าที่ไม่ซ้ำของวิธีชำระเงินในใบเสร็จ[cite: 1, 2]
-* **`dim_vehicle_category`**: โหลดจาก Seed `ref_vehicle_category`[cite: 1, 2]
-* **`dim_date`**: สร้างมิติวันที่ด้วย `generate_series()` ครอบคลุมช่วงวันที่ในระบบ คำนวณวันในสัปดาห์ วันหยุด[cite: 1, 2]
-* **`dim_hour`**: สร้างมิติชั่วโมง (0-23) พร้อมช่วงเวลา (`day_part`)[cite: 1, 2]
-
-### 5.3 Intermediate Tables (Pre-aggregated)
-* **`int_sales_daily`**: สรุปยอดขายรายวัน แยกตามสถานี, สินค้า และวันที่ (`quantity_sold`, `total_price`)[cite: 1, 2]
-* **`int_inventory_daily`**: สรุปธุรกรรมคลังน้ำมันรายวัน แยกตามสถานี, สินค้า และวันที่ (`quantity_in`, `quantity_out`)[cite: 1, 2]
-
-### 5.4 Data Marts (15 Business Questions)
-ตารางมาร์ทชั้นสุดท้าย ออกแบบเพื่อตอบคำถามทางธุรกิจโดยเฉพาะ
-1. **`mart_01_station_sales_tiering`**: จัดกลุ่มสถานีบริการตามยอดขายเฉลี่ยต่อวัน (สูง/กลาง/ต่ำ) ด้วย `NTILE(3)`
-2. **`mart_02_top_fuel_per_station`**: จัดอันดับสินค้าเชื้อเพลิงขายดีที่สุดในแต่ละสถานี (ปริมาณและมูลค่า)[cite: 1, 2]
-3. **`mart_03_peak_hours`**: วิเคราะห์ชั่วโมงที่มีจำนวนบิลหนาแน่นที่สุดของแต่ละสถานี
-4. **`mart_04_payment_mix`**: คำนวณสัดส่วนร้อยละของวิธีชำระเงินในแต่ละสถานี[cite: 1, 2]
-5. **`mart_05_weekday_vs_weekend`**: เปรียบเทียบยอดขายระหว่างวันธรรมดาและวันหยุดสุดสัปดาห์[cite: 1, 2]
-6. **`mart_06_top_employee_per_station`**: ค้นหาพนักงานที่ออกบิลมากที่สุดในแต่ละสถานี[cite: 1, 2]
-7. **`mart_07_sales_by_road`**: จัดอันดับสถานีบริการตามชื่อถนนที่ตั้ง[cite: 1, 2]
-8. **`mart_08_gasoline_vs_diesel`**: วิเคราะห์สัดส่วนยอดขายระหว่างกลุ่มน้ำมัน Gasoline และ Diesel[cite: 1, 2]
-9. **`mart_09_daily_station_ranking`**: หาสถานีที่มียอดขายสูงสุดและต่ำสุดในแต่ละวัน พร้อมอัตราส่วน[cite: 1, 2]
-10. **`mart_10_best_weekday_per_station`**: หาวันในสัปดาห์ที่ทำยอดขายได้ดีที่สุดของแต่ละสถานี[cite: 1, 2]
-11. **`mart_11_dispense_vs_sales_variance`**: เปรียบเทียบปริมาณน้ำมันที่ขายกับที่จ่ายออกจากถัง (ตั้งธงส่วนต่างเกิน 5%)[cite: 1, 2]
-12. **`mart_12_low_fuel_tanks`**: ตรวจสอบระดับน้ำมันคงเหลือ และตั้งธงแจ้งเตือนเมื่อต่ำกว่า 20%[cite: 1, 2]
-13. **`mart_13_staffing_structure`**: วิเคราะห์สัดส่วนโครงสร้างตำแหน่งพนักงานในแต่ละสถานี[cite: 1, 2]
-14. **`mart_14_credit_card_fee_simulation`**: จำลองต้นทุนค่าธรรมเนียมธุรกรรม 2% จากยอดชำระด้วยบัตรเครดิต[cite: 1, 2]
-15. **`mart_15_revenue_per_employee`**: วิเคราะห์ประสิทธิภาพยอดขายและจำนวนบิลต่อพนักงาน 1 คน[cite: 1, 2]
+* **`stg_Customer`**: โหลดข้อมูลลูกค้าดิบจากตาราง source ชื่อ `customer` มาทั้งหมด แล้วเพิ่มคอลัมน์ `ingestion_timestamp` บันทึกเวลาที่ดึงข้อมูลเข้ามา
+* **`stg_Employee`**: โหลดข้อมูลพนักงานดิบจากตาราง source ชื่อ `employee` มาทั้งหมด แล้วเพิ่ม `ingestion_timestamp`
+* **`stg_GasStation`**: โหลดข้อมูลสถานีบริการดิบจากตาราง source ชื่อ `gasstation` มาทั้งหมด แล้วเพิ่ม `ingestion_timestamp`
+* **`stg_Product`**: โหลดข้อมูลสินค้าดิบจากตาราง source ชื่อ `product` มาทั้งหมด แล้วเพิ่ม `ingestion_timestamp`
+* **`stg_Invoice`**: โหลดข้อมูลใบเสร็จดิบจากตาราง source ชื่อ `invoice`, แปลงคอลัมน์ `TotalAmount` จาก text เป็น double (ตาราง source เก็บทุกคอลัมน์เป็นตัวอักษรล้วน) แล้วเพิ่ม `ingestion_timestamp`
+* **`stg_InvoiceDetail`**: โหลดข้อมูลรายการสินค้าในใบเสร็จดิบจากตาราง source ชื่อ `invoicedetail`, แปลงคอลัมน์ `QuantitySold`, `SellingPrice` และ `TotalPrice` จาก text เป็น double แล้วเพิ่ม `ingestion_timestamp`
+* **`stg_StorageTank`**: โหลดข้อมูลถังเก็บน้ำมันดิบจากตาราง source ชื่อ `storagetank`, แปลง `TankID` เป็น bigint และ `Capacity`/`CurrentQuantity` เป็น double แล้วเพิ่ม `ingestion_timestamp`
+* **`stg_InventoryTransaction`**: โหลดข้อมูลธุรกรรมคลังน้ำมันดิบจากตาราง source ชื่อ `inventorytransaction`, แปลง `TankID` เป็น bigint และ `QuantityIn`/`QuantityOut`/`RemainingQuantity` เป็น double แล้วเพิ่ม `ingestion_timestamp`
+* **`stg_TankProductMap`**: โหลดตารางจับคู่ถัง-สินค้าที่ตรวจทานด้วยมือจาก seed ชื่อ `ref_tank_product_map`, แปลง `valid_from`, `valid_to` และ `reviewed_at` เป็น timestamp ด้วย `try_cast` (เพราะบางแถวมีค่าว่าง) แล้วเพิ่ม `ingestion_timestamp`
 
 ---
-6. **ลูกค้ารถแต่ละประเภทกลับมาซื้อซ้ำที่สถานีเดิมมากน้อยเพียงใด และแตกต่างกันระหว่างสถานีอย่างไรในช่วงข้อมูลที่มี**
-   - วัดอัตราการกลับมาซื้อซ้ำ (Repeat Purchase Rate) ของลูกค้าแต่ละกลุ่มในรอบระยะเวลา 24 วัน
-7. **ลูกค้ากลุ่มใดใช้บริการหลายสถานี และยอดขายของลูกค้ากลุ่มนี้กระจายระหว่างสถานีและชนิดน้ำมันอย่างไร**
-   - วิเคราะห์พฤติกรรมลูกค้าที่เดินทางข้ามสาขา และสัดส่วนการใช้จ่ายของกลุ่มลูกค้าดังกล่าว
-8. **พนักงานแต่ละคนและแต่ละตำแหน่งมีปริมาณรายการขายที่บันทึกแตกต่างกันอย่างไร ตามสถานี วัน และช่วงเวลา เพื่อใช้ประกอบการวางแผนกำลังคน**
-   - ประเมินภาระงาน (Employee Workload) ของพนักงานแต่ละคนและแต่ละตำแหน่งผ่านจำนวนบิลที่บันทึก
-9. **ยอดขายของแต่ละสถานีเพิ่มขึ้นหรือลดลงจากวันเดียวกันในสัปดาห์ก่อนเท่าใด และน้ำมันชนิดใดมีส่วนต่อการเปลี่ยนแปลงมากที่สุด**
-   - เปรียบเทียบอัตราการเติบโตแบบสัปดาห์ต่อสัปดาห์ (Week-over-Week Change) เพื่อหาปัจจัยผลักดันยอดขาย
-10. **ในแต่ละสถานี ลูกค้ารถประเภทใดมักซื้อน้ำมันหลายชนิดในบิลเดียว และคู่สินค้าใดปรากฏร่วมกันบ่อยที่สุด**
-    - วิเคราะห์ความสัมพันธ์ของสินค้าที่ถูกซื้อร่วมกันในบิลเดียวกัน (Product Affinity) เพื่อออกแบบข้อเสนอพิเศษ
-11. **สถานีและชนิดน้ำมันใดมีปริมาณรับเข้าไม่สมดุลกับปริมาณจ่ายออกในแต่ละวัน เพื่อทบทวนแผนเติมน้ำมัน**
-    - ตรวจสอบความผิดปกติหรือความไม่สอดคล้องระหว่างปริมาณน้ำมันรับเข้าคลังกับการจ่ายออกใช้งานจริง
-12. **ถังของสถานีใดมีระดับน้ำมันต่ำกว่าเกณฑ์ที่กำหนดบ่อยที่สุด และเกิดกับน้ำมันชนิดใดในช่วงเวลาใด**
-    - วิเคราะห์ความถี่ในการแตะระดับวิกฤตของถังเก็บน้ำมัน เพื่อปรับปรุงรอบการสั่งเติมน้ำมัน
-13. **การเติมน้ำมันแต่ละครั้งของแต่ละสถานีมีขนาดและความถี่เหมาะสมกับความจุถังและอัตราจ่ายออกของน้ำมันแต่ละชนิดเพียงใด**
-    - ประเมินประสิทธิภาพรอบการเติมน้ำมัน (Refill Pattern) เทียบกับความจุสูงสุดของถังใต้ดิน
-14. **ปริมาณขายตามใบเสร็จตรงกับปริมาณจ่ายออกจากถังหรือไม่ และส่วนต่างกระจุกตัวที่สถานี น้ำมันชนิด หรือวันใด**
-    - ทำการกระทบยอด (Sales & Dispense Reconciliation) ตรวจสอบความคลาดเคลื่อนระหว่างยอดขายกับปริมาณน้ำมันที่พร่องไปจากถัง
-15. **เมื่ออิงยอดคงเหลือ ณ สิ้นสุดข้อมูลและอัตราขายเฉลี่ยย้อนหลัง 7 วัน สถานีและน้ำมันชนิดใดควรได้รับการเติมก่อน**
-    - จัดลำดับความสำคัญในการเติมน้ำมัน (Reorder Priority) ตามปริมาณสต็อกคงเหลือและอัตราการบริโภคย้อนหลัง
-
----
-
-## 9. Interactive Web Application & Analytics Dashboard
-
-โปรเจกต์นี้ได้รับการพัฒนาและเปิดให้เข้าใช้งานผ่าน Streamlit Web Application ที่รวมทั้งระบบตรวจเช็กคลังข้อมูล (DW Inspector) และแดชบอร์ดวิเคราะห์ธุรกิจ (Executive Analytics) ไว้ในระบบเดียว:
-
-### 1. เข้าใช้งานผ่านลิงก์ (URL)
-คลิกที่ลิงก์ด้านล่างเพื่อเปิดหน้าเว็บไซต์ได้โดยตรงบนเบราว์เซอร์:  
-**Live Demo Web Application:**  
-[เข้าใช้งาน GasStation Enterprise DW & Analytics Studio](https://kdvxcyh5deojv4aewtnmwb.streamlit.app/)
-
-### 2. เข้าใช้งานด้วยการสแกน QR Code
-คุณสามารถใช้แอปพลิเคชันกล้องถ่ายรูปในสมาร์ทโฟน (iOS/Android) หรือแอปพลิเคชันสแกน QR เพื่อสแกนรูปภาพ QR Code ด้านล่างนี้ ระบบจะพาคุณไปยังหน้าเว็บไซต์ทันที  
-<img width="1000" height="1000" alt="QR Code" src="https://github.com/user-attachments/assets/d578cb4b-e1b7-461f-92c4-2c114d732a8a" />
