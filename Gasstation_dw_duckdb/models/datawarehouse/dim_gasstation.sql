@@ -10,7 +10,16 @@ with valid_stations as (
         notes
     from {{ ref('stg_GasStation') }}
     where not has_required_value_error
+),
+
+unique_stations as (
+    select *,
+        row_number() over (partition by gasstation_id) as row_num
+    from valid_stations
 )
-select *, false as is_unknown_member from valid_stations
+
+select * exclude (row_num), current_localtimestamp() as insertion_timestamp, false as is_unknown_member
+from unique_stations
+where row_num = 1
 union all
-select -1, 'Unknown Gas Station', null, null, null, null, true
+select -1, 'Unknown Gas Station', null, null, null, null, current_localtimestamp(), true

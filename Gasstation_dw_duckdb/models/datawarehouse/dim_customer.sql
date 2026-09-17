@@ -16,9 +16,18 @@ with valid_customers as (
     left join {{ ref('ref_vehicle_category') }} v
         on c.vehicle_type_key = v.vehicle_type_key
     where not c.has_required_value_error
+),
+
+unique_customers as (
+    select *,
+        row_number() over (partition by customer_id) as row_num
+    from valid_customers
 )
-select *, false as is_unknown_member from valid_customers
+
+select * exclude (row_num), current_localtimestamp() as insertion_timestamp, false as is_unknown_member
+from unique_customers
+where row_num = 1
 union all
 select
     -1, 'Unknown Customer', null, null, null, null,
-    null, null, null, 'Unknown', true
+    null, null, null, 'Unknown', current_localtimestamp(), true

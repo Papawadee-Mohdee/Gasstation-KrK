@@ -11,7 +11,16 @@ with valid_employees as (
         address
     from {{ ref('stg_Employee') }}
     where not has_required_value_error
+),
+
+unique_employees as (
+    select *,
+        row_number() over (partition by employee_id) as row_num
+    from valid_employees
 )
-select *, false as is_unknown_member from valid_employees
+
+select * exclude (row_num), current_localtimestamp() as insertion_timestamp, false as is_unknown_member
+from unique_employees
+where row_num = 1
 union all
-select -1, 'Unknown Employee', null, null, null, null, null, null, true
+select -1, 'Unknown Employee', null, null, null, null, null, null, current_localtimestamp(), true

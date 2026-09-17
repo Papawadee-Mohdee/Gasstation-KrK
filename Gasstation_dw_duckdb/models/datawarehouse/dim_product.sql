@@ -14,7 +14,16 @@ with valid_products as (
     left join {{ ref('ref_product_policy') }} pol
         on p.product_id = pol.product_id
     where not p.has_required_value_error
+),
+
+unique_products as (
+    select *,
+        row_number() over (partition by product_id) as row_num
+    from valid_products
 )
-select *, false as is_unknown_member from valid_products
+
+select * exclude (row_num), current_localtimestamp() as insertion_timestamp, false as is_unknown_member
+from unique_products
+where row_num = 1
 union all
-select -1, 'Unknown Product', null, null, null, null, false, 'unverified', true
+select -1, 'Unknown Product', null, null, null, null, false, 'unverified', current_localtimestamp(), true
