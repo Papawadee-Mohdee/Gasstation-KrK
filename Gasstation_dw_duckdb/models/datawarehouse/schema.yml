@@ -60,8 +60,9 @@ models:
       - name: gasstation_id
         tests:
           - relationships:
-              to: ref('dim_gasstation')
-              field: gasstation_id
+              arguments:
+                to: ref('dim_gasstation')
+                field: gasstation_id
 
   - name: fact_sales
     columns:
@@ -70,13 +71,15 @@ models:
       - name: gasstation_id
         tests:
           - relationships:
-              to: ref('dim_gasstation')
-              field: gasstation_id
+              arguments:
+                to: ref('dim_gasstation')
+                field: gasstation_id
       - name: product_id
         tests:
           - relationships:
-              to: ref('dim_product')
-              field: product_id
+              arguments:
+                to: ref('dim_product')
+                field: product_id
 
   - name: fact_inventory_transaction
     columns:
@@ -85,18 +88,21 @@ models:
       - name: gasstation_id
         tests:
           - relationships:
-              to: ref('dim_gasstation')
-              field: gasstation_id
+              arguments:
+                to: ref('dim_gasstation')
+                field: gasstation_id
 
   - name: int_sales_daily
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [gasstation_id, product_id, date_key]
+          arguments:
+            combination_of_columns: [gasstation_id, product_id, date_key]
 
   - name: int_inventory_daily
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [gasstation_id, product_id, date_key]
+          arguments:
+            combination_of_columns: [gasstation_id, product_id, date_key]
 
   - name: mart_01_station_sales_tiering
     columns:
