@@ -12,6 +12,10 @@ target/
 # DuckDB Database files
 *.duckdb
 *.duckdb.wal
+# ...except the built warehouse committed for the deployed Streamlit app
+# (Streamlit Community Cloud only runs `streamlit run app.py`, not `dbt run`,
+# so the app needs this file to already exist in the repo)
+!Gasstation_dw_duckdb/dev.duckdb
 
 # Operating System Files
 .DS_Store
