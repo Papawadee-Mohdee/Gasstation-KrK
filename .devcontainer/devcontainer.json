@@ -1,7 +1,10 @@
 {
   "name": "GasStation DW",
   "image": "mcr.microsoft.com/devcontainers/python:3.11",
-  "postCreateCommand": "python3 -m venv .venv && .venv/bin/pip install --upgrade pip && .venv/bin/pip install -r requirements.txt",
+  "containerEnv": {
+    "DBT_PROFILES_DIR": "${containerWorkspaceFolder}/Gasstation_dw_duckdb"
+  },
+  "postCreateCommand": "python3 -m venv .venv && .venv/bin/pip install --upgrade pip && .venv/bin/pip install -r requirements.txt && cd Gasstation_dw_duckdb && ../.venv/bin/dbt deps && ../.venv/bin/python load_raw.py",
   "forwardPorts": [8501],
   "portsAttributes": {
     "8501": {

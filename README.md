@@ -297,8 +297,22 @@ Fact table เก็บ **"เหตุการณ์" หรือ "ธุร�
 
 ## การใช้งาน (Getting Started)
 
-1. ติดตั้งไลบรารีที่จำเป็น: `pip install -r requirements.txt`
-2. รันคลังข้อมูล: `cd Gasstation_dw_duckdb && dbt seed && dbt run && dbt test`
-3. เปิดแดชบอร์ด: `streamlit run app.py` (รันจาก root ของ repo)
+### ผ่าน GitHub Codespaces (แนะนำ)
+เปิด repo บน GitHub → **Code** → แท็บ **Codespaces** → **Create codespace on main** รอให้ container ติดตั้งไลบรารีลง `.venv`, ติดตั้ง dbt package (`dbt deps`) และโหลดข้อมูลดิบเข้า `dev.duckdb` ให้อัตโนมัติ (ผ่าน `.devcontainer/devcontainer.json`) จากนั้นเปิด terminal แล้วรันคำสั่งได้เลยโดยไม่ต้องตั้งค่าอะไรเพิ่ม:
 
-หรือเปิดผ่าน **GitHub Codespaces** ได้ทันที — ระบบจะติดตั้งไลบรารีให้อัตโนมัติผ่าน `.devcontainer/devcontainer.json` จากนั้นรัน `streamlit run app.py` เพื่อเปิดแดชบอร์ด (พอร์ต 8501 จะถูก forward ให้อัตโนมัติ)
+```
+cd Gasstation_dw_duckdb
+dbt seed && dbt run && dbt test
+cd ..
+streamlit run app.py
+```
+
+พอร์ต 8501 จะถูก forward ให้อัตโนมัติเมื่อ Streamlit เริ่มทำงาน
+
+### รันในเครื่องตัวเอง (Local)
+1. ติดตั้งไลบรารีที่จำเป็น: `pip install -r requirements.txt`
+2. เข้าโฟลเดอร์โปรเจกต์ dbt: `cd Gasstation_dw_duckdb`
+3. ติดตั้ง dbt package: `dbt deps`
+4. โหลดข้อมูลดิบเข้า DuckDB (ครั้งแรกครั้งเดียว หรือเมื่อต้องการรีเฟรชข้อมูลดิบ): `python load_raw.py`
+5. รันคลังข้อมูล: `dbt seed && dbt run && dbt test`
+6. เปิดแดชบอร์ด (กลับไปที่ root ของ repo ก่อน): `cd .. && streamlit run app.py`
