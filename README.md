@@ -288,3 +288,17 @@ Fact table เก็บ **"เหตุการณ์" หรือ "ธุร�
 13. **`mart_13_staffing_structure`**: นับจำนวนพนักงานต่อสถานีต่อตำแหน่งจาก `dim_employee` แล้วคำนวณสัดส่วนร้อยละของแต่ละตำแหน่งต่อจำนวนพนักงานรวมของสถานี พร้อมระบุตำแหน่งที่มีสัดส่วนมากที่สุด
 14. **`mart_14_credit_card_fee_simulation`**: รวมยอดขายรวมและยอดขายที่ชำระด้วยบัตรเครดิตต่อสถานีจาก `fact_invoice` แล้วจำลองต้นทุนค่าธรรมเนียมธุรกรรม 2% จากยอดที่ชำระด้วยบัตรเครดิต
 15. **`mart_15_revenue_per_employee`**: รวมยอดขายและจำนวนบิล (จาก `fact_invoice`) เข้ากับจำนวนพนักงานและจำนวนพนักงานเติมน้ำมัน (จาก `dim_employee`) ต่อสถานี เพื่อคำนวณยอดขายต่อพนักงานและจำนวนบิลต่อพนักงานเติมน้ำมัน 1 คน
+
+---
+
+## 11. สรุปภาพรวมทั้งระบบ
+
+ระบบคลังข้อมูลนี้เป็นตัวอย่างของ **Galaxy Schema (Fact Constellation)** ที่มี fact table 3 ตัว (`fact_invoice`, `fact_sales`, `fact_inventory_transaction`) แชร์ conformed dimension ร่วมกัน (`dim_gasstation`, `dim_date`, `dim_hour`, `dim_product`) ข้อมูลไหลผ่านกระบวนการ ELT ตั้งแต่ raw CSV → source ทั้งหมดเป็น VARCHAR → staging (แปลงชนิดข้อมูลเท่าที่จำเป็น) → dimension/fact (คัดข้อมูลซ้ำ + เปลี่ยนชื่อคอลัมน์) → intermediate (พรีคำนวณผลรวม) → mart (ตอบคำถามธุรกิจ 15 ข้อโดยตรง) และปิดท้ายด้วยแดชบอร์ด Streamlit ที่ดึงข้อมูลจากตาราง mart ไปแสดงผลแบบโต้ตอบได้
+
+## การใช้งาน (Getting Started)
+
+1. ติดตั้งไลบรารีที่จำเป็น: `pip install -r requirements.txt`
+2. รันคลังข้อมูล: `cd Gasstation_dw_duckdb && dbt seed && dbt run && dbt test`
+3. เปิดแดชบอร์ด: `streamlit run app.py` (รันจาก root ของ repo)
+
+หรือเปิดผ่าน **GitHub Codespaces** ได้ทันที — ระบบจะติดตั้งไลบรารีให้อัตโนมัติผ่าน `.devcontainer/devcontainer.json` จากนั้นรัน `streamlit run app.py` เพื่อเปิดแดชบอร์ด (พอร์ต 8501 จะถูก forward ให้อัตโนมัติ)

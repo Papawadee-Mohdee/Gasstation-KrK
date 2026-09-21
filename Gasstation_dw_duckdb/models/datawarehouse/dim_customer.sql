@@ -1,24 +1,33 @@
 {{ config(materialized='table') }}
 
-with valid_customers as (
+with source as (
+
     select
-        c.customer_id,
-        c.customer_name,
-        c.address,
-        c.phone_number,
-        c.email,
-        c.notes,
-        c.vehicle_type,
-        c.vehicle_type_key,
-        c.license_plate,
-        coalesce(cast(v.vehicle_category as varchar), 'Unknown') as vehicle_category
+        c.CustomerID as customer_id,
+        c.CustomerName as customer_name,
+        c.Address as address,
+        c.PhoneNumber as phone_number,
+        c.Email as email,
+        c.Notes as notes,
+        c.VehicleTypeName as vehicle_type,
+        lower(c.VehicleTypeName) as vehicle_type_key,
+        coalesce(v.vehicle_category, 'Unknown') as vehicle_category,
+        c.LicensePlate as license_plate,
+        current_localtimestamp() as insertion_timestamp
     from {{ ref('stg_Customer') }} c
     left join {{ ref('ref_vehicle_category') }} v
-        on c.vehicle_type_key = v.vehicle_type_key
-    where not c.has_required_value_error
+        on lower(c.VehicleTypeName) = v.vehicle_type_key
+    where c.CustomerID is not null
+
+),
+
+unique_source as (
+    select *,
+        row_number() over (partition by customer_id) as row_num
+    from source
 )
-select *, false as is_unknown_member from valid_customers
-union all
-select
-    -1, 'Unknown Customer', null, null, null, null,
-    null, null, null, 'Unknown', true
+
+select *
+exclude (row_num)
+from unique_source
+where row_num = 1
